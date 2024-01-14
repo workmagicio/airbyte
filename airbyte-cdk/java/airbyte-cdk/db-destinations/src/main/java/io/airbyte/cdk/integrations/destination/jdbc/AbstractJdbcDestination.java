@@ -95,7 +95,7 @@ public abstract class AbstractJdbcDestination<DestinationState extends MinimumDe
     final DataSource dataSource = getDataSource(config);
 
     try {
-      final JdbcDatabase database = getDatabase(dataSource);
+      final JdbcDatabase database = getDatabase(dataSource, config);
       final String outputSchema = namingResolver.getIdentifier(config.get(JdbcUtils.SCHEMA_KEY).asText());
       attemptTableOperations(outputSchema, database, namingResolver, sqlOperations, false);
       if (TypingAndDedupingFlag.isDestinationV2()) {
@@ -233,8 +233,9 @@ public abstract class AbstractJdbcDestination<DestinationState extends MinimumDe
   }
 
   @VisibleForTesting
-  public JdbcDatabase getDatabase(final DataSource dataSource) {
-    return new DefaultJdbcDatabase(dataSource);
+  public JdbcDatabase getDatabase(final DataSource dataSource, JsonNode config) {
+    Long wmTenantId = config.has("wm_tenant_id") ? config.get("wm_tenant_id").asLong() : null;
+    return new DefaultJdbcDatabase(dataSource, wmTenantId == null ? 0L : wmTenantId);
   }
 
   protected Map<String, String> getConnectionProperties(final JsonNode config) {
@@ -302,9 +303,10 @@ public abstract class AbstractJdbcDestination<DestinationState extends MinimumDe
                                                                        final ConfiguredAirbyteCatalog catalog,
                                                                        final Consumer<AirbyteMessage> outputRecordCollector)
       throws Exception {
-    final JdbcDatabase database = getDatabase(getDataSource(config));
+    final JdbcDatabase database = getDatabase(getDataSource(config), config);
     // Short circuit for non-v2 destinations.
     if (!TypingAndDedupingFlag.isDestinationV2()) {
+
       return JdbcBufferedConsumerFactory.createAsync(
           outputRecordCollector,
           database,
