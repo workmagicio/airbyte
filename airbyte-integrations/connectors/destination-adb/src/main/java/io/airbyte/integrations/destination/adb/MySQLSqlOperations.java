@@ -259,9 +259,9 @@ public class MySQLSqlOperations extends JdbcSqlOperations {
         return String.format(
                 "CREATE TABLE IF NOT EXISTS %s.%s ( \n"
                         + "wm_tenant_id BIGINT,\n"
-                        + "%s VARCHAR(256),\n"
+                        + "%s VARCHAR,\n"
                         + "%s JSON,\n"
-                        + "%s TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP(6),\n"
+                        + "%s TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n"
                         + "PRIMARY KEY (wm_tenant_id, %s)"
                         + ");\n",
                 schemaName, tableName, JavaBaseConstants.COLUMN_NAME_AB_ID, JavaBaseConstants.COLUMN_NAME_DATA, JavaBaseConstants.COLUMN_NAME_EMITTED_AT, JavaBaseConstants.COLUMN_NAME_AB_ID);
