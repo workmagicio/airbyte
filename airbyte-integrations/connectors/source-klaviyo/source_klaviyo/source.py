@@ -10,7 +10,7 @@ from airbyte_cdk.models import SyncMode
 from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream
 from requests.exceptions import HTTPError
-from source_klaviyo.streams import Campaigns, EmailTemplates, Events, Flows, GlobalExclusions, Lists, Metrics, Profiles
+from source_klaviyo.streams import Campaigns, EmailTemplates, Events, Flows, GlobalExclusions, Lists, Metrics, Profiles, MetricAggregates
 
 
 class SourceKlaviyo(AbstractSource):
@@ -57,6 +57,7 @@ class SourceKlaviyo(AbstractSource):
             Flows(api_key=api_key, start_date=start_date),
             EmailTemplates(api_key=api_key, start_date=start_date),
             Profiles(api_key=api_key, start_date=start_date),
+            MetricAggregates(api_key=api_key, start_date=start_date),
         ]
 
     def continue_sync_on_stream_failure(self) -> bool:
