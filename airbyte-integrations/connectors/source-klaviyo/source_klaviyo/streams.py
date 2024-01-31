@@ -2,6 +2,7 @@
 # Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
+import json
 import urllib.parse
 from abc import ABC, abstractmethod
 from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Union
@@ -318,3 +319,108 @@ class EmailTemplates(IncrementalKlaviyoStream):
 
     def path(self, **kwargs) -> str:
         return "templates"
+
+
+class MetricAggregates(IncrementalKlaviyoStream):
+    """Docs: https://developers.klaviyo.com/en/reference/query_metric_aggregates"""
+
+    cursor_field = "$datetime"
+    metric_field = "$metric_id"
+    primary_key = [metric_field, cursor_field]
+
+    @property
+    def http_method(self) -> str:
+        return "POST"
+
+    def path(self, **kwargs) -> str:
+        return "metric-aggregates"
+
+    def stream_slices(
+        self,
+        stream_state: Mapping[str, Any] = None,
+        **kwargs
+    ) -> Iterable[Optional[Mapping[str, any]]]:
+        metrics = Metrics(api_key=self._api_key, start_date=self._start_ts)
+        records = metrics.read_records(sync_mode=SyncMode.full_refresh)
+        for record in records:
+            self.logger.info("metric record %s", json.dumps(record))
+            yield {"metric_id": record["id"]}
+
+    def request_params(
+        self,
+        stream_state: Mapping[str, Any],
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None
+    ) -> MutableMapping[str, Any]:
+        return {}
+
+    def request_body_json(
+        self,
+        stream_state: Optional[Mapping[str, Any]],
+        stream_slice: Optional[Mapping[str, Any]] = None,
+        next_page_token: Optional[Mapping[str, Any]] = None,
+    ) -> Optional[Mapping[str, Any]]:
+        stream_state = stream_state or {}
+        self.logger.info("stream state %s", json.dumps(stream_state))
+        latest_cursor = stream_state.get(self.cursor_field) or self._start_ts or pendulum.yesterday().isoformat()
+        self.logger.info("latest cursor %s", latest_cursor)
+        minimum_datetime = max(pendulum.parse(latest_cursor).start_of("day"), pendulum.yesterday().subtract(days=60))
+        maximum_datetime = max(minimum_datetime.add(days=1), pendulum.today())
+        data = {
+            "data": {
+                "type": "metric-aggregate",
+                "attributes": {
+                    "metric_id": stream_slice["metric_id"],
+                    "measurements": [
+                        "sum_value",
+                        "unique",
+                        "count",
+                    ],
+                    "by": [
+                        "Campaign Name"
+                    ],
+                    "filter": [
+                        f"greater-or-equal(datetime,{minimum_datetime.isoformat()})",
+                        f"less-than(datetime,{maximum_datetime.isoformat()})"
+                    ],
+                    "interval": "day",
+                    "timezone": "UTC"
+                }
+            }
+        }
+        self.logger.info("request body json %s", json.dumps(data))
+        return data
+
+    def parse_response(
+        self,
+        response: requests.Response,
+        stream_slice: Optional[Mapping[str, Any]] = None,
+        **kwargs
+    ) -> Iterable[Mapping]:
+        response_json = response.json()
+        self.logger.info("response body json %s", json.dumps(response_json))
+        response_data = response_json.get("data", {})
+        for i, date in enumerate(response_data.get("attributes", {}).get("dates", [])):
+            try:
+                # split by date
+                record = json.loads(json.dumps(response_data))  # deep copy
+                record[self.cursor_field] = pendulum.parse(date).format("YYYY-MM-DD")
+                record[self.metric_field] = stream_slice["metric_id"]
+                record["attributes"]["metric_id"] = stream_slice["metric_id"]
+                record["attributes"]["dates"] = record["attributes"]["dates"][i:i+1]
+                for data in record["attributes"]["data"]:
+                    data["measurements"]["sum_value"] = data["measurements"]["sum_value"][i:i+1]
+                    data["measurements"]["unique"] = data["measurements"]["unique"][i:i+1]
+                    data["measurements"]["count"] = data["measurements"]["count"][i:i+1]
+                self.logger.info("metric aggregate record %s", json.dumps(record))
+                yield record
+            except Exception as e:
+                self.logger.error("metric aggregate record error %s", e)
+
+    def get_updated_state(
+        self,
+        stream_state: MutableMapping[str, Any],
+        latest_record: Mapping[str, Any]
+    ) -> Mapping[str, Any]:
+        stream_state[self.cursor_field] = latest_record[self.cursor_field]
+        return stream_state
