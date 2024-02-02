@@ -4,6 +4,8 @@
   "properties": {
     "type": { "type": "string" },
     "id": { "type": "string" },
+    "$metric_id": { "type": "string" },
+    "$datetime": { "type": "string" },
     "attributes": {
       "type": ["null", "object"],
       "properties": {
@@ -42,8 +44,6 @@
     "links": {
       "type": ["null", "object"],
       "additionalProperties": true
-    },
-    "$metric_id": { "type": "string" },
-    "$datetime": { "type": "string" }
+    }
   }
 }
