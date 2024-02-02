@@ -252,6 +252,7 @@ class Profiles(IncrementalKlaviyoStream):
 class Campaigns(ArchivedRecordsMixin, IncrementalKlaviyoStream):
     """Docs: https://developers.klaviyo.com/en/v2023-06-15/reference/get_campaigns"""
 
+    use_cache = True
     cursor_field = "updated_at"
     api_revision = "2023-06-15"
 
@@ -323,7 +324,44 @@ class EmailTemplates(IncrementalKlaviyoStream):
         return "templates"
 
 
-class FlowFlowActions(HttpSubStream, IncrementalKlaviyoStream):
+class SubIncrementalKlaviyoStream(HttpSubStream, IncrementalKlaviyoStream):
+
+    @property
+    @abstractmethod
+    def parent_field(self) -> Union[str, List[str]]:
+        pass
+
+    def __init__(self, parent: HttpStream, **kwargs):
+        super().__init__(parent=parent, **kwargs)
+
+    def parse_response(
+        self,
+        response: requests.Response,
+        stream_slice: Optional[Mapping[str, Any]] = None,
+        **kwargs
+    ) -> Iterable[Mapping]:
+        self.logger.info("stream slice %s", json.dumps(stream_slice))
+        for record in super().parse_response(response, **kwargs):
+            record[self.parent_field] = stream_slice["parent"]["id"]
+            self.logger.info("record %s", json.dumps(record))
+            yield record
+
+
+class CampaignCampaignMessages(SubIncrementalKlaviyoStream):
+    """Docs: https://developers.klaviyo.com/en/reference/get_campaign_campaign_messages"""
+
+    use_cache = True
+    cursor_field = "updated_at"
+    parent_field = "$campaign_id"
+    state_checkpoint_interval = 50  # API can return maximum 50 records per page
+
+    def path(self, stream_slice: Optional[Mapping[str, Any]] = None, **kwargs) -> str:
+        self.logger.info("stream slice %s", json.dumps(stream_slice))
+        parent_id = stream_slice["parent"]["id"]
+        return f"campaigns/{parent_id}/campaign-messages"
+
+
+class FlowFlowActions(SubIncrementalKlaviyoStream):
     """Docs: https://developers.klaviyo.com/en/reference/get_flow_flow_actions"""
 
     use_cache = True
@@ -331,28 +369,13 @@ class FlowFlowActions(HttpSubStream, IncrementalKlaviyoStream):
     parent_field = "$flow_id"
     state_checkpoint_interval = 50  # API can return maximum 50 records per page
 
-    def __init__(self, parent: HttpStream, **kwargs):
-        super().__init__(parent=parent, **kwargs)
-
     def path(self, stream_slice: Optional[Mapping[str, Any]] = None, **kwargs) -> str:
         self.logger.info("stream slice %s", json.dumps(stream_slice))
         parent_id = stream_slice["parent"]["id"]
         return f"flows/{parent_id}/flow-actions"
 
-    def parse_response(
-        self,
-        response: requests.Response,
-        stream_slice: Optional[Mapping[str, Any]] = None,
-        **kwargs
-    ) -> Iterable[Mapping]:
-        self.logger.info("stream slice %s", json.dumps(stream_slice))
-        for record in super().parse_response(response, **kwargs):
-            record[self.parent_field] = stream_slice["parent"]["id"]
-            self.logger.info("record %s", json.dumps(record))
-            yield record
 
-
-class FlowActionMessages(HttpSubStream, IncrementalKlaviyoStream):
+class FlowActionMessages(SubIncrementalKlaviyoStream):
     """Docs: https://developers.klaviyo.com/en/reference/get_flow_action_messages"""
 
     use_cache = True
@@ -360,36 +383,18 @@ class FlowActionMessages(HttpSubStream, IncrementalKlaviyoStream):
     parent_field = "$flow_action_id"
     state_checkpoint_interval = 50  # API can return maximum 50 records per page
 
-    def __init__(self, parent: HttpStream, **kwargs):
-        super().__init__(parent=parent, **kwargs)
-
     def path(self, stream_slice: Optional[Mapping[str, Any]] = None, **kwargs) -> str:
         self.logger.info("stream slice %s", json.dumps(stream_slice))
         parent_id = stream_slice["parent"]["id"]
         return f"flow-actions/{parent_id}/flow-messages"
 
-    def parse_response(
-        self,
-        response: requests.Response,
-        stream_slice: Optional[Mapping[str, Any]] = None,
-        **kwargs
-    ) -> Iterable[Mapping]:
-        self.logger.info("stream slice %s", json.dumps(stream_slice))
-        for record in super().parse_response(response, **kwargs):
-            record[self.parent_field] = stream_slice["parent"]["id"]
-            self.logger.info("record %s", json.dumps(record))
-            yield record
 
-
-class MetricAggregates(HttpSubStream, IncrementalKlaviyoStream):
+class MetricAggregates(SubIncrementalKlaviyoStream):
     """Docs: https://developers.klaviyo.com/en/reference/query_metric_aggregates"""
 
     cursor_field = "$datetime"
     parent_field = "$metric_id"
     primary_key = [parent_field, cursor_field]
-
-    def __init__(self, parent: HttpStream, **kwargs):
-        super().__init__(parent=parent, **kwargs)
 
     @property
     def http_method(self) -> str:
