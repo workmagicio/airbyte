@@ -324,7 +324,7 @@ class EmailTemplates(IncrementalKlaviyoStream):
         return "templates"
 
 
-class SubIncrementalKlaviyoStream(HttpSubStream, IncrementalKlaviyoStream):
+class SubKlaviyoStream(HttpSubStream, KlaviyoStream, ABC):
 
     @property
     @abstractmethod
@@ -347,7 +347,7 @@ class SubIncrementalKlaviyoStream(HttpSubStream, IncrementalKlaviyoStream):
             yield record
 
 
-class CampaignCampaignMessages(SubIncrementalKlaviyoStream):
+class CampaignCampaignMessages(SubKlaviyoStream, SemiIncrementalKlaviyoStream):
     """Docs: https://developers.klaviyo.com/en/reference/get_campaign_campaign_messages"""
 
     use_cache = True
@@ -361,7 +361,7 @@ class CampaignCampaignMessages(SubIncrementalKlaviyoStream):
         return f"campaigns/{parent_id}/campaign-messages"
 
 
-class FlowFlowActions(SubIncrementalKlaviyoStream):
+class FlowFlowActions(SubKlaviyoStream, IncrementalKlaviyoStream):
     """Docs: https://developers.klaviyo.com/en/reference/get_flow_flow_actions"""
 
     use_cache = True
@@ -375,7 +375,7 @@ class FlowFlowActions(SubIncrementalKlaviyoStream):
         return f"flows/{parent_id}/flow-actions"
 
 
-class FlowActionMessages(SubIncrementalKlaviyoStream):
+class FlowActionMessages(SubKlaviyoStream, IncrementalKlaviyoStream):
     """Docs: https://developers.klaviyo.com/en/reference/get_flow_action_messages"""
 
     use_cache = True
@@ -389,7 +389,7 @@ class FlowActionMessages(SubIncrementalKlaviyoStream):
         return f"flow-actions/{parent_id}/flow-messages"
 
 
-class MetricAggregates(SubIncrementalKlaviyoStream):
+class MetricAggregates(SubKlaviyoStream, IncrementalKlaviyoStream):
     """Docs: https://developers.klaviyo.com/en/reference/query_metric_aggregates"""
 
     cursor_field = "$datetime"
