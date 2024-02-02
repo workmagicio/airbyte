@@ -170,7 +170,7 @@ class SemiIncrementalKlaviyoStream(KlaviyoStream, ABC):
         stream_state: Optional[Mapping[str, Any]] = None,
     ) -> Iterable[StreamData]:
         stream_state = stream_state or {}
-        starting_point = stream_state.get(self.cursor_field, self._start_ts)
+        starting_point = stream_state.get(self.cursor_field)
         for record in super().read_records(
             sync_mode=sync_mode, cursor_field=cursor_field, stream_slice=stream_slice, stream_state=stream_state
         ):
@@ -348,6 +348,7 @@ class FlowFlowActions(HttpSubStream, IncrementalKlaviyoStream):
         self.logger.info("stream slice %s", json.dumps(stream_slice))
         for record in super().parse_response(response, **kwargs):
             record[self.parent_field] = stream_slice["parent"]["id"]
+            self.logger.info("record %s", json.dumps(record))
             yield record
 
 
@@ -376,6 +377,7 @@ class FlowActionMessages(HttpSubStream, IncrementalKlaviyoStream):
         self.logger.info("stream slice %s", json.dumps(stream_slice))
         for record in super().parse_response(response, **kwargs):
             record[self.parent_field] = stream_slice["parent"]["id"]
+            self.logger.info("record %s", json.dumps(record))
             yield record
 
 
