@@ -12,7 +12,7 @@ import requests
 from airbyte_cdk.models import SyncMode
 from airbyte_cdk.sources.streams.availability_strategy import AvailabilityStrategy
 from airbyte_cdk.sources.streams.core import StreamData
-from airbyte_cdk.sources.streams.http import HttpStream
+from airbyte_cdk.sources.streams.http import HttpStream, HttpSubStream
 from airbyte_cdk.sources.utils.transform import TransformConfig, TypeTransformer
 
 from .availability_strategy import KlaviyoAvailabilityStrategy
@@ -314,6 +314,7 @@ class GlobalExclusions(Profiles):
 class Metrics(SemiIncrementalKlaviyoStream):
     """Docs: https://developers.klaviyo.com/en/reference/get_metrics"""
 
+    use_cache = True
     cursor_field = "updated"
 
     def path(self, **kwargs) -> str:
@@ -333,6 +334,7 @@ class Events(IncrementalKlaviyoStream):
 class Flows(ArchivedRecordsMixin, IncrementalKlaviyoStream):
     """Docs: https://developers.klaviyo.com/en/reference/get_flows"""
 
+    use_cache = True
     cursor_field = "updated"
     state_checkpoint_interval = 50  # API can return maximum 50 records per page
 
@@ -350,12 +352,71 @@ class EmailTemplates(IncrementalKlaviyoStream):
         return "templates"
 
 
-class MetricAggregates(IncrementalKlaviyoStream):
+class FlowFlowActions(HttpSubStream, IncrementalKlaviyoStream):
+    """Docs: https://developers.klaviyo.com/en/reference/get_flow_flow_actions"""
+
+    use_cache = True
+    cursor_field = "updated"
+    parent_field = "$flow_id"
+    state_checkpoint_interval = 50  # API can return maximum 50 records per page
+
+    def __init__(self, parent: HttpStream, **kwargs):
+        super().__init__(parent=parent, **kwargs)
+
+    def path(self, stream_slice: Optional[Mapping[str, Any]] = None, **kwargs) -> str:
+        self.logger.info("stream slice %s", json.dumps(stream_slice))
+        parent_id = stream_slice["parent"]["id"]
+        return f"flows/{parent_id}/flow-actions"
+
+    def parse_response(
+        self,
+        response: requests.Response,
+        stream_slice: Optional[Mapping[str, Any]] = None,
+        **kwargs
+    ) -> Iterable[Mapping]:
+        self.logger.info("stream slice %s", json.dumps(stream_slice))
+        for record in super().parse_response(response, **kwargs):
+            record[self.parent_field] = stream_slice["parent"]["id"]
+            yield record
+
+
+class FlowActionMessages(HttpSubStream, IncrementalKlaviyoStream):
+    """Docs: https://developers.klaviyo.com/en/reference/get_flow_action_messages"""
+
+    use_cache = True
+    cursor_field = "updated"
+    parent_field = "$flow_action_id"
+    state_checkpoint_interval = 50  # API can return maximum 50 records per page
+
+    def __init__(self, parent: HttpStream, **kwargs):
+        super().__init__(parent=parent, **kwargs)
+
+    def path(self, stream_slice: Optional[Mapping[str, Any]] = None, **kwargs) -> str:
+        self.logger.info("stream slice %s", json.dumps(stream_slice))
+        parent_id = stream_slice["parent"]["id"]
+        return f"flow-actions/{parent_id}/flow-messages"
+
+    def parse_response(
+        self,
+        response: requests.Response,
+        stream_slice: Optional[Mapping[str, Any]] = None,
+        **kwargs
+    ) -> Iterable[Mapping]:
+        self.logger.info("stream slice %s", json.dumps(stream_slice))
+        for record in super().parse_response(response, **kwargs):
+            record[self.parent_field] = stream_slice["parent"]["id"]
+            yield record
+
+
+class MetricAggregates(HttpSubStream, IncrementalKlaviyoStream):
     """Docs: https://developers.klaviyo.com/en/reference/query_metric_aggregates"""
 
     cursor_field = "$datetime"
-    metric_field = "$metric_id"
-    primary_key = [metric_field, cursor_field]
+    parent_field = "$metric_id"
+    primary_key = [parent_field, cursor_field]
+
+    def __init__(self, parent: HttpStream, **kwargs):
+        super().__init__(parent=parent, **kwargs)
 
     @property
     def http_method(self) -> str:
@@ -363,17 +424,6 @@ class MetricAggregates(IncrementalKlaviyoStream):
 
     def path(self, **kwargs) -> str:
         return "metric-aggregates"
-
-    def stream_slices(
-        self,
-        stream_state: Mapping[str, Any] = None,
-        **kwargs
-    ) -> Iterable[Optional[Mapping[str, any]]]:
-        metrics = Metrics(api_key=self._api_key, start_date=self._start_ts)
-        records = metrics.read_records(sync_mode=SyncMode.full_refresh)
-        for record in records:
-            self.logger.info("metric record %s", json.dumps(record))
-            yield {"metric_id": record["id"]}
 
     def request_params(
         self,
@@ -391,6 +441,7 @@ class MetricAggregates(IncrementalKlaviyoStream):
     ) -> Optional[Mapping[str, Any]]:
         stream_state = stream_state or {}
         self.logger.info("stream state %s", json.dumps(stream_state))
+        self.logger.info("stream slice %s", json.dumps(stream_slice))
         latest_cursor = stream_state.get(self.cursor_field) or self._start_ts or pendulum.yesterday().isoformat()
         self.logger.info("latest cursor %s", latest_cursor)
         minimum_datetime = max(pendulum.parse(latest_cursor).start_of("day"), pendulum.yesterday().subtract(days=60))
@@ -399,14 +450,14 @@ class MetricAggregates(IncrementalKlaviyoStream):
             "data": {
                 "type": "metric-aggregate",
                 "attributes": {
-                    "metric_id": stream_slice["metric_id"],
+                    "metric_id": stream_slice["parent"]["id"],
                     "measurements": [
                         "sum_value",
                         "unique",
                         "count",
                     ],
                     "by": [
-                        "Campaign Name"
+                        "$message"  # todo
                     ],
                     "filter": [
                         f"greater-or-equal(datetime,{minimum_datetime.isoformat()})",
@@ -417,7 +468,7 @@ class MetricAggregates(IncrementalKlaviyoStream):
                 }
             }
         }
-        self.logger.info("request body json %s", json.dumps(data))
+        self.logger.info("request body %s", json.dumps(data))
         return data
 
     def parse_response(
@@ -426,16 +477,17 @@ class MetricAggregates(IncrementalKlaviyoStream):
         stream_slice: Optional[Mapping[str, Any]] = None,
         **kwargs
     ) -> Iterable[Mapping]:
+        self.logger.info("stream slice %s", json.dumps(stream_slice))
         response_json = response.json()
-        self.logger.info("response body json %s", json.dumps(response_json))
+        self.logger.info("response body %s", json.dumps(response_json))
         response_data = response_json.get("data", {})
         for i, date in enumerate(response_data.get("attributes", {}).get("dates", [])):
             try:
                 # split by date
                 record = json.loads(json.dumps(response_data))  # deep copy
                 record[self.cursor_field] = pendulum.parse(date).format("YYYY-MM-DD")
-                record[self.metric_field] = stream_slice["metric_id"]
-                record["attributes"]["metric_id"] = stream_slice["metric_id"]
+                record[self.parent_field] = stream_slice["parent"]["id"]
+                record["attributes"]["metric_id"] = stream_slice["parent"]["id"]
                 record["attributes"]["dates"] = record["attributes"]["dates"][i:i+1]
                 for data in record["attributes"]["data"]:
                     data["measurements"]["sum_value"] = data["measurements"]["sum_value"][i:i+1]
