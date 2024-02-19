@@ -32,13 +32,24 @@ public class DefaultJdbcDatabase extends JdbcDatabase {
 
   protected final DataSource dataSource;
 
+  protected String wmTenantId;
+
   public DefaultJdbcDatabase(final DataSource dataSource) {
     this(dataSource, JdbcUtils.getDefaultSourceOperations());
+  }
+
+  public DefaultJdbcDatabase(final DataSource dataSource, String wmTenantId) {
+    this(dataSource, JdbcUtils.getDefaultSourceOperations());
+    this.wmTenantId = wmTenantId;
   }
 
   public DefaultJdbcDatabase(final DataSource dataSource, final JdbcCompatibleSourceOperations<?> sourceOperations) {
     super(sourceOperations);
     this.dataSource = dataSource;
+  }
+
+  public String getWmTenantId() {
+    return wmTenantId;
   }
 
   @Override

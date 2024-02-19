@@ -85,7 +85,7 @@ public abstract class AbstractJdbcDestination extends JdbcConnector implements D
     final DataSource dataSource = getDataSource(config);
 
     try {
-      final JdbcDatabase database = getDatabase(dataSource);
+      final JdbcDatabase database = getDatabase(dataSource, config);
       final String outputSchema = namingResolver.getIdentifier(config.get(JdbcUtils.SCHEMA_KEY).asText());
       attemptTableOperations(outputSchema, database, namingResolver, sqlOperations, false);
       if (TypingAndDedupingFlag.isDestinationV2()) {
@@ -223,8 +223,9 @@ public abstract class AbstractJdbcDestination extends JdbcConnector implements D
   }
 
   @VisibleForTesting
-  public JdbcDatabase getDatabase(final DataSource dataSource) {
-    return new DefaultJdbcDatabase(dataSource);
+  public JdbcDatabase getDatabase(final DataSource dataSource, JsonNode config) {
+    String wmTenantId = config.has("wm_tenant_id") ? config.get("wm_tenant_id").asText() : null;
+    return new DefaultJdbcDatabase(dataSource, wmTenantId == null ? "0" : wmTenantId);
   }
 
   protected Map<String, String> getConnectionProperties(final JsonNode config) {
@@ -277,7 +278,7 @@ public abstract class AbstractJdbcDestination extends JdbcConnector implements D
                                                                        final Consumer<AirbyteMessage> outputRecordCollector)
       throws Exception {
     final DataSource dataSource = getDataSource(config);
-    final JdbcDatabase database = getDatabase(dataSource);
+    final JdbcDatabase database = getDatabase(dataSource, config);
     if (TypingAndDedupingFlag.isDestinationV2()) {
       // TODO: This logic exists in all V2 destinations.
       // This is sad that if we forget to add this, there will be a null pointer during parseCatalog
