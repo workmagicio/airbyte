@@ -416,6 +416,7 @@ class CampaignMessageTemplates(SubKlaviyoStream, KlaviyoStream):
         response_json = response.json()
         self.logger.info("response body %s", json.dumps(response_json))
         record = response_json.get("data", {})
+        record[self.cursor_field] = record["attributes"][self.cursor_field]
         record[self.parent_field] = stream_slice["parent"]["id"]
         yield record
 
