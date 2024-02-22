@@ -395,7 +395,33 @@ class FlowActionMessages(SubKlaviyoStream, IncrementalKlaviyoStream):
         return f"flow-actions/{parent_id}/flow-messages"
 
 
-class MetricAggregates(SubKlaviyoStream, IncrementalKlaviyoStream):
+class CampaignMessageTemplates(SubKlaviyoStream, KlaviyoStream):
+    """Docs: https://developers.klaviyo.com/en/reference/get_campaign_message_template"""
+
+    cursor_field = "updated"
+    parent_field = "$campaign_message_id"
+
+    def path(self, stream_slice: Optional[Mapping[str, Any]] = None, **kwargs) -> str:
+        self.logger.info("stream slice %s", json.dumps(stream_slice))
+        parent_id = stream_slice["parent"]["id"]
+        return f"campaign-messages/{parent_id}/template"
+
+    def parse_response(
+        self,
+        response: requests.Response,
+        stream_slice: Optional[Mapping[str, Any]] = None,
+        **kwargs
+    ) -> Iterable[Mapping]:
+        self.logger.info("stream slice %s", json.dumps(stream_slice))
+        response_json = response.json()
+        self.logger.info("response body %s", json.dumps(response_json))
+        record = response_json.get("data", {})
+        record[self.cursor_field] = record["attributes"][self.cursor_field]
+        record[self.parent_field] = stream_slice["parent"]["id"]
+        yield record
+
+
+class MetricAggregates(SubKlaviyoStream, KlaviyoStream):
     """Docs: https://developers.klaviyo.com/en/reference/query_metric_aggregates"""
 
     cursor_field = "$datetime"
@@ -408,14 +434,6 @@ class MetricAggregates(SubKlaviyoStream, IncrementalKlaviyoStream):
 
     def path(self, **kwargs) -> str:
         return "metric-aggregates"
-
-    def request_params(
-        self,
-        stream_state: Mapping[str, Any],
-        stream_slice: Mapping[str, Any] = None,
-        next_page_token: Mapping[str, Any] = None
-    ) -> MutableMapping[str, Any]:
-        return {}
 
     def request_body_json(
         self,
