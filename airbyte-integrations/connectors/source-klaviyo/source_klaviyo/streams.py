@@ -320,7 +320,7 @@ class Flows(ArchivedRecordsMixin, IncrementalKlaviyoStream):
         return "flows"
 
 
-class EmailTemplates(IncrementalKlaviyoStream):
+class EmailTemplates(KlaviyoStream):  # todo incremental
     """Docs: https://developers.klaviyo.com/en/reference/get_templates"""
 
     cursor_field = "updated"
