@@ -346,7 +346,6 @@ class SubKlaviyoStream(HttpSubStream, KlaviyoStream, ABC):
         stream_slice: Optional[Mapping[str, Any]] = None,
         **kwargs
     ) -> Iterable[Mapping]:
-        self.logger.info("stream slice %s", json.dumps(stream_slice))
         for record in super().parse_response(response, **kwargs):
             record[self.parent_field] = stream_slice["parent"]["id"]
             self.logger.info("record %s", json.dumps(record))
@@ -362,7 +361,6 @@ class CampaignCampaignMessages(SubKlaviyoStream, SemiIncrementalKlaviyoStream):
     state_checkpoint_interval = 50  # API can return maximum 50 records per page
 
     def path(self, stream_slice: Optional[Mapping[str, Any]] = None, **kwargs) -> str:
-        self.logger.info("stream slice %s", json.dumps(stream_slice))
         parent_id = stream_slice["parent"]["id"]
         return f"campaigns/{parent_id}/campaign-messages"
 
@@ -376,7 +374,6 @@ class FlowFlowActions(SubKlaviyoStream, IncrementalKlaviyoStream):
     state_checkpoint_interval = 50  # API can return maximum 50 records per page
 
     def path(self, stream_slice: Optional[Mapping[str, Any]] = None, **kwargs) -> str:
-        self.logger.info("stream slice %s", json.dumps(stream_slice))
         parent_id = stream_slice["parent"]["id"]
         return f"flows/{parent_id}/flow-actions"
 
@@ -390,35 +387,39 @@ class FlowActionMessages(SubKlaviyoStream, IncrementalKlaviyoStream):
     state_checkpoint_interval = 50  # API can return maximum 50 records per page
 
     def path(self, stream_slice: Optional[Mapping[str, Any]] = None, **kwargs) -> str:
-        self.logger.info("stream slice %s", json.dumps(stream_slice))
         parent_id = stream_slice["parent"]["id"]
         return f"flow-actions/{parent_id}/flow-messages"
 
 
-class CampaignMessageTemplates(SubKlaviyoStream, KlaviyoStream):
+class SingularKlaviyoStream(KlaviyoStream, ABC):
+
+    def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
+        response_json = response.json()
+        record = response_json.get("data", {})
+        record = self.map_record(record)
+        yield record
+
+
+class CampaignMessageTemplates(SingularKlaviyoStream, SubKlaviyoStream, KlaviyoStream):
     """Docs: https://developers.klaviyo.com/en/reference/get_campaign_message_template"""
 
     cursor_field = "updated"
     parent_field = "$campaign_message_id"
 
     def path(self, stream_slice: Optional[Mapping[str, Any]] = None, **kwargs) -> str:
-        self.logger.info("stream slice %s", json.dumps(stream_slice))
         parent_id = stream_slice["parent"]["id"]
         return f"campaign-messages/{parent_id}/template"
 
-    def parse_response(
-        self,
-        response: requests.Response,
-        stream_slice: Optional[Mapping[str, Any]] = None,
-        **kwargs
-    ) -> Iterable[Mapping]:
-        self.logger.info("stream slice %s", json.dumps(stream_slice))
-        response_json = response.json()
-        self.logger.info("response body %s", json.dumps(response_json))
-        record = response_json.get("data", {})
-        record[self.cursor_field] = record["attributes"][self.cursor_field]
-        record[self.parent_field] = stream_slice["parent"]["id"]
-        yield record
+
+class FlowMessageTemplates(SingularKlaviyoStream, SubKlaviyoStream, KlaviyoStream):
+    """Docs: https://developers.klaviyo.com/en/reference/get_flow_message_template"""
+
+    cursor_field = "updated"
+    parent_field = "$flow_message_id"
+
+    def path(self, stream_slice: Optional[Mapping[str, Any]] = None, **kwargs) -> str:
+        parent_id = stream_slice["parent"]["id"]
+        return f"flow-messages/{parent_id}/template"
 
 
 class MetricAggregates(SubKlaviyoStream, KlaviyoStream):
@@ -442,8 +443,6 @@ class MetricAggregates(SubKlaviyoStream, KlaviyoStream):
         next_page_token: Optional[Mapping[str, Any]] = None,
     ) -> Optional[Mapping[str, Any]]:
         stream_state = stream_state or {}
-        self.logger.info("stream state %s", json.dumps(stream_state))
-        self.logger.info("stream slice %s", json.dumps(stream_slice))
         latest_cursor = stream_state.get(self.cursor_field) or self._start_ts or pendulum.yesterday().isoformat()
         self.logger.info("latest cursor %s", latest_cursor)
         minimum_datetime = max(pendulum.parse(latest_cursor).start_of("day"), pendulum.yesterday().subtract(days=60))
@@ -479,7 +478,6 @@ class MetricAggregates(SubKlaviyoStream, KlaviyoStream):
         stream_slice: Optional[Mapping[str, Any]] = None,
         **kwargs
     ) -> Iterable[Mapping]:
-        self.logger.info("stream slice %s", json.dumps(stream_slice))
         response_json = response.json()
         self.logger.info("response body %s", json.dumps(response_json))
         response_data = response_json.get("data", {})
