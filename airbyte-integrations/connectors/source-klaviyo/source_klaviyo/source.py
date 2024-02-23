@@ -10,7 +10,7 @@ from airbyte_cdk.models import SyncMode
 from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream
 from requests.exceptions import HTTPError
-from source_klaviyo.streams import Campaigns, EmailTemplates, Events, Flows, GlobalExclusions, Lists, Metrics, Profiles, CampaignCampaignMessages, FlowFlowActions, FlowActionMessages, CampaignMessageTemplates, MetricAggregates
+from source_klaviyo.streams import Campaigns, EmailTemplates, Events, Flows, GlobalExclusions, Lists, Metrics, Profiles, CampaignCampaignMessages, FlowFlowActions, FlowActionMessages, CampaignMessageTemplates, FlowMessageTemplates, MetricAggregates
 
 
 class SourceKlaviyo(AbstractSource):
@@ -55,6 +55,7 @@ class SourceKlaviyo(AbstractSource):
         flows = Flows(api_key=api_key, start_date=start_date)
         flow_flow_actions = FlowFlowActions(parent=flows, api_key=api_key, start_date=start_date)
         flow_action_messages = FlowActionMessages(parent=flow_flow_actions, api_key=api_key, start_date=start_date)
+        flow_message_templates = FlowMessageTemplates(parent=flow_action_messages, api_key=api_key, start_date=start_date)
         metrics = Metrics(api_key=api_key, start_date=start_date)
         metric_aggregates = MetricAggregates(parent=metrics, api_key=api_key, start_date=start_date)
 
@@ -70,6 +71,7 @@ class SourceKlaviyo(AbstractSource):
             flows,
             flow_flow_actions,
             flow_action_messages,
+            flow_message_templates,
             metrics,
             metric_aggregates,
         ]
