@@ -10,7 +10,7 @@ from airbyte_cdk.models import SyncMode
 from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream
 from requests.exceptions import HTTPError
-from source_klaviyo.streams import Campaigns, EmailTemplates, Events, Flows, GlobalExclusions, Lists, Metrics, Profiles
+from source_klaviyo.streams import Campaigns, EmailTemplates, Events, Flows, GlobalExclusions, Lists, Metrics, Profiles, CampaignCampaignMessages, FlowFlowActions, FlowActionMessages, CampaignMessageTemplates, FlowMessageTemplates, MetricAggregates
 
 
 class SourceKlaviyo(AbstractSource):
@@ -48,15 +48,32 @@ class SourceKlaviyo(AbstractSource):
         """
         api_key = config["api_key"]
         start_date = config.get("start_date")
+
+        campaigns = Campaigns(api_key=api_key, start_date=start_date)
+        campaign_campaign_messages = CampaignCampaignMessages(parent=campaigns, api_key=api_key, start_date=start_date)
+        campaign_message_templates = CampaignMessageTemplates(parent=campaign_campaign_messages, api_key=api_key, start_date=start_date)
+        flows = Flows(api_key=api_key, start_date=start_date)
+        flow_flow_actions = FlowFlowActions(parent=flows, api_key=api_key, start_date=start_date)
+        flow_action_messages = FlowActionMessages(parent=flow_flow_actions, api_key=api_key, start_date=start_date)
+        flow_message_templates = FlowMessageTemplates(parent=flow_action_messages, api_key=api_key, start_date=start_date)
+        metrics = Metrics(api_key=api_key, start_date=start_date)
+        metric_aggregates = MetricAggregates(parent=metrics, api_key=api_key, start_date=start_date)
+
         return [
-            Campaigns(api_key=api_key, start_date=start_date),
             Events(api_key=api_key, start_date=start_date),
             GlobalExclusions(api_key=api_key, start_date=start_date),
             Lists(api_key=api_key, start_date=start_date),
-            Metrics(api_key=api_key, start_date=start_date),
-            Flows(api_key=api_key, start_date=start_date),
             EmailTemplates(api_key=api_key, start_date=start_date),
             Profiles(api_key=api_key, start_date=start_date),
+            campaigns,
+            campaign_campaign_messages,
+            campaign_message_templates,
+            flows,
+            flow_flow_actions,
+            flow_action_messages,
+            flow_message_templates,
+            metrics,
+            metric_aggregates,
         ]
 
     def continue_sync_on_stream_failure(self) -> bool:
