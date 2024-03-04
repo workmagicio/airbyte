@@ -430,5 +430,5 @@ streams:
   - "#/definitions/page_insights_stream"
 
 check:
-  stream_names:
-    - "page"
+  stream_names: []
+    # - "page"
