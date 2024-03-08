@@ -187,7 +187,7 @@ class UserLifetimeInsights(DatetimeTransformerMixin, InstagramStream):
 
     @staticmethod
     def _transform_breakdown_results(breakdown_results: Iterable[Mapping[str, Any]]) -> Mapping[str, Any]:
-        return {res.get("dimension_values")[0]: res.get("value") for res in breakdown_results}
+        return {",".join(res.get("dimension_values")): res.get("value") for res in breakdown_results}
 
 
 class UserInsights(DatetimeTransformerMixin, InstagramIncrementalStream):
