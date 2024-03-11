@@ -201,16 +201,11 @@ definitions:
               'albums',
               'canvas_elements',
               'events',
-              'feed',
               'global_brand_children',
               'groups',
               'image_copyrights',
               'indexed_videos',
-              'likes',
-              'live_videos',
               'photos',
-              'product_catalogs',
-              'rtb_dynamic_posts',
               'video_lists',
               'videos',
               ]) 
@@ -282,10 +277,6 @@ definitions:
               'via',
               'video_buying_eligibility',
               'width',
-              'comments',
-              'dynamic_posts',
-              'likes',
-              'reactions',
               'sharedposts',
               'sponsor_tags',
               'to'
@@ -309,6 +300,8 @@ definitions:
       requester:
         $ref: "#/definitions/requester"
         request_parameters:
+          date_preset: "last_30d"
+          period: "day"
           fields: |
             {{ 
               'insights.metric(%s)' % ','.join([
@@ -353,6 +346,8 @@ definitions:
       requester:
         $ref: "#/definitions/requester"
         request_parameters:
+          date_preset: "last_30d"
+          period: "day"
           metric: |
             {{
               ','.join([
