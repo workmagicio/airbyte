@@ -206,10 +206,7 @@ definitions:
               'groups',
               'image_copyrights',
               'indexed_videos',
-              'likes',
               'photos',
-              'posts',
-              'product_catalogs',
               'video_lists',
               'videos',
               ]) 
