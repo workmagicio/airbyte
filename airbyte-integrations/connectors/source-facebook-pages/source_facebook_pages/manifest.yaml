@@ -27,8 +27,8 @@ definitions:
     type: DefaultPaginator
     pagination_strategy:
       type: "CursorPagination"
-      cursor_value: "{{ response.paging.get('cursors', {}).get('after') }}"
-      stop_condition: "{{ response.paging == '' or not response.paging.get('next') }}"
+      cursor_value: "{{ response.get('paging', {}).get('cursors', {}).get('after') }}"
+      stop_condition: "{{ response.get('paging', {}) == '' or not response.get('paging', {}).get('next') }}"
       page_size: 100
     page_size_option:
       field_name: "page_size"
