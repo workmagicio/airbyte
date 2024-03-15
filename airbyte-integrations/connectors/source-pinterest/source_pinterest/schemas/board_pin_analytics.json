@@ -9,7 +9,7 @@
       "type": ["null", "string"],
       "format": "date"
     },
-    "user_id": {
+    "board_pin_id": {
       "type": ["null", "string"]
     },
     "metrics": {

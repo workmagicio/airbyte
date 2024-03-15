@@ -52,6 +52,8 @@ from .streams import (
     Keywords,
     PinterestStream,
     UserAccountAnalytics,
+    UserAccounts,
+    BoardPinAnalytics,
 )
 
 logger = logging.getLogger("airbyte")
@@ -129,7 +131,9 @@ class SourcePinterest(AbstractSource):
         ad_groups = AdGroups(ad_accounts, config=config, status_filter=status)
         campaigns = Campaigns(ad_accounts, config=config, status_filter=status)
         boards = Boards(config)
+        board_pins = BoardPins(boards, config=config)
         board_sections = BoardSections(boards, config=config)
+        user_accounts = UserAccounts(config=config)
         return [
             ad_accounts,
             AdAccountAnalytics(ad_accounts, config=config),
@@ -138,14 +142,14 @@ class SourcePinterest(AbstractSource):
             ad_groups,
             AdGroupAnalytics(ad_groups, config=config),
             boards,
-            BoardPins(boards, config=config),
+            board_pins,
             board_sections,
             BoardSectionPins(board_sections, config=config),
             campaigns,
             CampaignAnalytics(campaigns, config=config),
             CampaignAnalyticsReport(ad_accounts, config=report_config),
             CampaignTargetingReport(ad_accounts, config=report_config),
-            UserAccountAnalytics(None, config=config),
+            UserAccountAnalytics(user_accounts, config=config),
             Keywords(ad_groups, config=config),
             Audiences(ad_accounts, config=config),
             ConversionTags(ad_accounts, config=config),
@@ -163,6 +167,8 @@ class SourcePinterest(AbstractSource):
             ProductGroupTargetingReport(ad_accounts, config=report_config),
             KeywordReport(ad_accounts, config=report_config),
             ProductItemReport(ad_accounts, config=report_config),
+            BoardPinAnalytics(board_pins, config=config),
+            user_accounts,
         ] + self.get_custom_report_streams(ad_accounts, config=report_config)
 
     def get_custom_report_streams(self, parent, config: dict) -> List[Type[Stream]]:
