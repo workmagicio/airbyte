@@ -185,6 +185,8 @@ class BoardSections(PinterestSubStream, PinterestStream):
 
 
 class BoardPins(PinterestSubStream, PinterestStream):
+    use_cache = True
+
     def path(self, stream_slice: Mapping[str, Any] = None, **kwargs) -> str:
         return f"boards/{stream_slice['parent']['id']}/pins"
 
@@ -282,6 +284,7 @@ class IncrementalPinterestStream(PinterestStream, ABC):
 
 class IncrementalPinterestSubStream(IncrementalPinterestStream):
     cursor_field = "updated_time"
+    parent_field = "parent_id"
 
     def __init__(self, parent: HttpStream, with_data_slices: bool = True, **kwargs):
         super().__init__(**kwargs)
@@ -299,6 +302,12 @@ class IncrementalPinterestSubStream(IncrementalPinterestStream):
                 parents_slice.update(date_slice)
 
                 yield parents_slice
+
+    def parse_response(self, response: requests.Response, stream_slice: Mapping[str, any], **kwargs) -> Iterable[Mapping]:
+        self.logger.info(f"parse_response stream_slice {stream_slice}")
+        for record in super().parse_response(response=response, stream_slice=stream_slice, **kwargs):
+            record[self.parent_field] = stream_slice["parent"]["id"]
+            yield record
 
 
 class PinterestAnalyticsStream(IncrementalPinterestSubStream):
@@ -364,8 +373,10 @@ class ServerSideFilterStream(IncrementalPinterestSubStream):
 
 
 class UserAccountAnalytics(PinterestAnalyticsStream):
+    primary_key = ["user_id", "date"]
     data_fields = ["all", "daily_metrics"]
     cursor_field = "date"
+    parent_field = "user_id"
 
     def path(self, **kwargs) -> str:
         return "user_account/analytics"
@@ -426,3 +437,28 @@ class AdAnalytics(PinterestAnalyticsStream):
 
     def path(self, stream_slice: Mapping[str, Any] = None, **kwargs) -> str:
         return f"ad_accounts/{stream_slice['sub_parent']['parent']['id']}/ads/analytics"
+
+
+class UserAccounts(PinterestStream):
+
+    def path(self, **kwargs) -> str:
+        return "user_account"
+
+    def parse_response(self, response: requests.Response, stream_state: Mapping[str, Any], **kwargs) -> Iterable[Mapping]:
+        record = response.json()
+        yield record
+
+
+class BoardPinAnalytics(PinterestAnalyticsStream):
+    primary_key = ["board_pin_id", "date"]
+    data_fields = ["all", "daily_metrics"]
+    cursor_field = "date"
+    parent_field = "board_pin_id"
+
+    def path(self, stream_slice: Mapping[str, Any] = None, **kwargs) -> str:
+        return f"pins/{stream_slice['parent']['id']}/analytics"
+
+    def request_params(self, **kwargs) -> MutableMapping[str, Any]:
+        params = super().request_params(**kwargs)
+        params.update({"metric_types": "ALL"})
+        return params
