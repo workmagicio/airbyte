@@ -148,7 +148,7 @@ class IncrementalKlaviyoStream(KlaviyoStream, ABC):
 
         if not params.get("filter"):
             stream_state_cursor_value = stream_state.get(self.cursor_field)
-            latest_cursor = stream_state_cursor_value or self._start_ts
+            latest_cursor = stream_state_cursor_value  # or self._start_ts  # todo
             if latest_cursor:
                 latest_cursor = pendulum.parse(latest_cursor)
                 if stream_state_cursor_value:
@@ -371,7 +371,6 @@ class SubKlaviyoStream(HttpSubStream, KlaviyoStream, ABC):
     ) -> Iterable[Mapping]:
         for record in super().parse_response(response, **kwargs):
             record[self.parent_field] = stream_slice["parent"]["id"]
-            self.logger.info("record %s", json.dumps(record))
             yield record
 
 
