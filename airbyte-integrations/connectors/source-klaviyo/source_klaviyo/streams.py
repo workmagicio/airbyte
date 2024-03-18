@@ -418,8 +418,9 @@ class SingularKlaviyoStream(KlaviyoStream, ABC):
     def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
         response_json = response.json()
         record = response_json.get("data", {})
-        record = self.map_record(record)
-        yield record
+        if record:
+            record = self.map_record(record)
+            yield record
 
 
 class CampaignMessageTemplates(SingularKlaviyoStream, SubKlaviyoStream, KlaviyoStream):
