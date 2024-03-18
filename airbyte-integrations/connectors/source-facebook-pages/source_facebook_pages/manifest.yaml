@@ -332,6 +332,12 @@ definitions:
               'post_clicks_unique',
               'post_clicks_by_type',
               'post_clicks_by_type_unique',
+              'post_reactions_like_total',
+              'post_reactions_love_total',
+              'post_reactions_wow_total',
+              'post_reactions_haha_total',
+              'post_reactions_sorry_total',
+              'post_reactions_anger_total',
               'post_reactions_by_type_total',
               ])
             }}
