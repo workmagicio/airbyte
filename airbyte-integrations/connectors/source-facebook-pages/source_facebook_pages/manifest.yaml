@@ -205,7 +205,6 @@ definitions:
               'global_brand_children',
               'groups',
               'image_copyrights',
-              'indexed_videos',
               'photos',
               'video_lists',
               'videos',
