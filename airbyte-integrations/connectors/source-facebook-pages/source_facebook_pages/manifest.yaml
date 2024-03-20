@@ -199,7 +199,6 @@ definitions:
               'whatsapp_number',
               'written_by',
               'albums',
-              'call_to_actions',
               'canvas_elements',
               'events',
               'global_brand_children',
