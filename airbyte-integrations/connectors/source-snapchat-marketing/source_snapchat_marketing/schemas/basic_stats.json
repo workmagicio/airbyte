@@ -123,85 +123,181 @@
     "conversion_save": {
       "type": ["null", "number"]
     },
+    "conversion_save_value": {
+      "type": ["null", "number"]
+    },
     "conversion_start_checkout": {
+      "type": ["null", "number"]
+    },
+    "conversion_start_checkout_value": {
       "type": ["null", "number"]
     },
     "conversion_add_cart": {
       "type": ["null", "number"]
     },
+    "conversion_add_cart_value": {
+      "type": ["null", "number"]
+    },
     "conversion_view_content": {
+      "type": ["null", "number"]
+    },
+    "conversion_view_content_value": {
       "type": ["null", "number"]
     },
     "conversion_add_billing": {
       "type": ["null", "number"]
     },
+    "conversion_add_billing_value": {
+      "type": ["null", "number"]
+    },
+    "conversion_sign_ups": {
+      "type": ["null", "number"]
+    },
+    "conversion_sign_ups_value": {
+      "type": ["null", "number"]
+    },
     "conversion_searches": {
+      "type": ["null", "number"]
+    },
+    "conversion_searches_value": {
       "type": ["null", "number"]
     },
     "conversion_level_completes": {
       "type": ["null", "number"]
     },
+    "conversion_level_completes_value": {
+      "type": ["null", "number"]
+    },
     "conversion_app_opens": {
+      "type": ["null", "number"]
+    },
+    "conversion_app_opens_value": {
       "type": ["null", "number"]
     },
     "conversion_page_views": {
       "type": ["null", "number"]
     },
+    "conversion_page_views_value": {
+      "type": ["null", "number"]
+    },
     "conversion_subscribe": {
+      "type": ["null", "number"]
+    },
+    "conversion_subscribe_value": {
       "type": ["null", "number"]
     },
     "conversion_ad_click": {
       "type": ["null", "number"]
     },
+    "conversion_ad_click_value": {
+      "type": ["null", "number"]
+    },
     "conversion_ad_view": {
+      "type": ["null", "number"]
+    },
+    "conversion_ad_view_value": {
       "type": ["null", "number"]
     },
     "conversion_complete_tutorial": {
       "type": ["null", "number"]
     },
+    "conversion_complete_tutorial_value": {
+      "type": ["null", "number"]
+    },
     "conversion_invite": {
+      "type": ["null", "number"]
+    },
+    "conversion_invite_value": {
       "type": ["null", "number"]
     },
     "conversion_login": {
       "type": ["null", "number"]
     },
+    "conversion_login_value": {
+      "type": ["null", "number"]
+    },
     "conversion_share": {
+      "type": ["null", "number"]
+    },
+    "conversion_share_value": {
       "type": ["null", "number"]
     },
     "conversion_reserve": {
       "type": ["null", "number"]
     },
+    "conversion_reserve_value": {
+      "type": ["null", "number"]
+    },
     "conversion_achievement_unlocked": {
+      "type": ["null", "number"]
+    },
+    "conversion_achievement_unlocked_value": {
       "type": ["null", "number"]
     },
     "conversion_add_to_wishlist": {
       "type": ["null", "number"]
     },
+    "conversion_add_to_wishlist_value": {
+      "type": ["null", "number"]
+    },
     "conversion_spend_credits": {
+      "type": ["null", "number"]
+    },
+    "conversion_spend_credits_value": {
       "type": ["null", "number"]
     },
     "conversion_rate": {
       "type": ["null", "number"]
     },
+    "conversion_rate_value": {
+      "type": ["null", "number"]
+    },
     "conversion_start_trial": {
+      "type": ["null", "number"]
+    },
+    "conversion_start_trial_value": {
       "type": ["null", "number"]
     },
     "conversion_list_view": {
       "type": ["null", "number"]
     },
+    "conversion_list_view_value": {
+      "type": ["null", "number"]
+    },
+    "conversion_visit": {
+      "type": ["null", "number"]
+    },
+    "conversion_visit_value": {
+      "type": ["null", "number"]
+    },
     "custom_event_1": {
+      "type": ["null", "number"]
+    },
+    "custom_event_1_value": {
       "type": ["null", "number"]
     },
     "custom_event_2": {
       "type": ["null", "number"]
     },
+    "custom_event_2_value": {
+      "type": ["null", "number"]
+    },
     "custom_event_3": {
+      "type": ["null", "number"]
+    },
+    "custom_event_3_value": {
       "type": ["null", "number"]
     },
     "custom_event_4": {
       "type": ["null", "number"]
     },
+    "custom_event_4_value": {
+      "type": ["null", "number"]
+    },
     "custom_event_5": {
+      "type": ["null", "number"]
+    },
+    "custom_event_5_value": {
       "type": ["null", "number"]
     },
     "attachment_frequency": {
