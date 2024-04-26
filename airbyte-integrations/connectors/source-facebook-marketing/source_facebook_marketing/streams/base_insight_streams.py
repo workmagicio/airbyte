@@ -322,7 +322,7 @@ class AdsInsights(FBMarketingIncrementalStream):
                 logger.warning(
                     f"Loading insights older then {self.INSIGHTS_RETENTION_PERIOD} is not possible. Start sync from {oldest_date}."
                 )
-            start_dates_for_account[account_id] = max(oldest_date, start_date)
+            start_dates_for_account[account_id] = max(oldest_date, start_date) - pendulum.duration(days=30)
         return start_dates_for_account
 
     def request_params(self, **kwargs) -> MutableMapping[str, Any]:
