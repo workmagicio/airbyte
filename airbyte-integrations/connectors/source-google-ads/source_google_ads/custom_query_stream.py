@@ -103,7 +103,7 @@ class IncrementalCustomQuery(CustomQueryMixin, IncrementalGoogleAdsStream):
             query = query.append_field("segments.date")
         # todo
         import pendulum
-        start_date = pendulum.parse(start_date).subtract(days=1).to_date_string()
+        start_date = pendulum.parse(start_date).subtract(days=30).to_date_string()
         condition = f"segments.date BETWEEN '{start_date}' AND '{end_date}'"
         if query.where:
             return query.set_where(query.where + " AND " + condition)
