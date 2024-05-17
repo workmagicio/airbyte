@@ -2,7 +2,7 @@
 # Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
-
+import logging
 from functools import lru_cache
 from typing import Any, Dict, Mapping
 
@@ -10,7 +10,7 @@ from .streams import GoogleAdsStream, IncrementalGoogleAdsStream
 from .utils import GAQL
 
 DATE_TYPES = ("segments.date", "segments.month", "segments.quarter", "segments.week")
-
+logger = logging.getLogger("airbyte")
 
 class CustomQueryMixin:
     def __init__(self, config, **kwargs):
@@ -104,6 +104,7 @@ class IncrementalCustomQuery(CustomQueryMixin, IncrementalGoogleAdsStream):
         # todo
         import pendulum
         start_date = pendulum.parse(start_date).subtract(days=30).to_date_string()
+        logger.info(f"google ads start_date {start_date}")
         condition = f"segments.date BETWEEN '{start_date}' AND '{end_date}'"
         if query.where:
             return query.set_where(query.where + " AND " + condition)
