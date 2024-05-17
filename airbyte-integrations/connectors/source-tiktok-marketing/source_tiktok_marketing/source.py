@@ -99,11 +99,11 @@ class SourceTiktokMarketing(AbstractSource):
         if pendulum.parse(start_date) < pendulum.parse(MINIMUM_START_DATE):
             logger.warning(f"The start date is too far in the past. Setting it to {MINIMUM_START_DATE}.")
             start_date = MINIMUM_START_DATE
-        start_date = start_date - pendulum.duration(days=30)
+        start_date = pendulum.parse(start_date) - pendulum.duration(days=30)
         logger.info(f"tiktok ads start_date {start_date}")
         stream_args = {
             "authenticator": TiktokTokenAuthenticator(access_token),
-            "start_date": start_date,
+            "start_date": start_date.to_date_string(),
             "end_date": config.get("end_date") or DEFAULT_END_DATE,
             "app_id": app_id,
             "secret": secret,
