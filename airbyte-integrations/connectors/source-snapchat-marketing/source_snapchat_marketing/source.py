@@ -130,6 +130,13 @@ METRICS_NOT_HOURLY = [
     "earned_reach",
 ]
 
+METRICS_NEW = [
+    "conversion_purchases_swipe_up",
+    "conversion_purchases_value_swipe_up",
+    "conversion_purchases_view",
+    "conversion_purchases_value_view",
+]
+
 logger = logging.getLogger("airbyte")
 
 
@@ -420,7 +427,15 @@ class Stats(SnapchatMarketingStream, ABC):
         params = super().request_params(stream_state=stream_state, stream_slice=stream_slice, next_page_token=next_page_token)
         params["granularity"] = self.granularity.value
         if self.metrics:
+            if len(self.metrics) > 10:
+                if not all(item in METRICS for item in self.metrics):
+                    self.metrics = self.metrics + METRICS_NEW
+                    params["conversion_source_types"] = "web,app,offline"
+                    params["view_attribution_window"] = "1_DAY"
+                    params["swipe_up_attribution_window"] = "28_DAY"
+
             params["fields"] = ",".join(self.metrics)
+            self.logger.info(f"======xk-test==== params:{params}")
 
         return params
 
@@ -433,6 +448,7 @@ class Stats(SnapchatMarketingStream, ABC):
         next_page_token: Mapping[str, Any] = None,
     ) -> Iterable[Mapping]:
         """Customized by adding stream state setting"""
+        self.logger.info(f"======xk-test==== response:{response.text}")
 
         for record in super().parse_response(
             response=response, stream_state=stream_state, stream_slice=stream_slice, next_page_token=next_page_token

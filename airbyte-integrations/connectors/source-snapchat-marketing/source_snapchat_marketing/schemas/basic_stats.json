@@ -323,6 +323,66 @@
     },
     "story_completes": {
       "type": ["null", "number"]
+    },
+    "conversion_add_cart_offline": {
+      "type": ["null", "number"]
+    },
+    "conversion_purchases_value_app_view": {
+      "type": ["null", "number"]
+    },
+    "conversion_purchases_web": {
+      "type": ["null", "number"]
+    },
+    "conversion_purchases_offline_swipe_up": {
+      "type": ["null", "number"]
+    },
+    "conversion_purchases_app_swipe_up": {
+      "type": ["null", "number"]
+    },
+    "conversion_add_cart_app": {
+      "type": ["null", "number"]
+    },
+    "conversion_purchases_value_offline_swipe_up": {
+      "type": ["null", "number"]
+    },
+    "conversion_purchases_value_web_view": {
+      "type": ["null", "number"]
+    },
+    "conversion_purchases_value_web_swipe_up": {
+      "type": ["null", "number"]
+    },
+    "conversion_purchases_offline_view": {
+      "type": ["null", "number"]
+    },
+    "conversion_purchases_offline": {
+      "type": ["null", "number"]
+    },
+    "conversion_purchases_app_view": {
+      "type": ["null", "number"]
+    },
+    "conversion_purchases_value_app_swipe_up": {
+      "type": ["null", "number"]
+    },
+    "conversion_purchases_app": {
+      "type": ["null", "number"]
+    },
+    "conversion_purchases_value_app": {
+      "type": ["null", "number"]
+    },
+    "conversion_purchases_value_web": {
+      "type": ["null", "number"]
+    },
+    "conversion_purchases_web_view": {
+      "type": ["null", "number"]
+    },
+    "conversion_purchases_value_offline_view": {
+      "type": ["null", "number"]
+    },
+    "conversion_purchases_value_offline": {
+      "type": ["null", "number"]
+    },
+    "conversion_add_cart_web": {
+      "type": ["null", "number"]
     }
   }
 }
