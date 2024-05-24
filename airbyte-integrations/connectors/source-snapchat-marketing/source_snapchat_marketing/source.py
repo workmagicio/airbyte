@@ -135,6 +135,7 @@ METRICS_NEW = [
     "conversion_purchases_value_swipe_up",
     "conversion_purchases_view",
     "conversion_purchases_value_view",
+    "conversion_purchases_web_swipe_up",
 ]
 
 logger = logging.getLogger("airbyte")

@@ -383,6 +383,9 @@
     },
     "conversion_add_cart_web": {
       "type": ["null", "number"]
+    },
+    "conversion_purchases_web_swipe_up": {
+      "type": ["null", "number"]
     }
   }
 }
