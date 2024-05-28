@@ -429,7 +429,7 @@ class Stats(SnapchatMarketingStream, ABC):
         params["granularity"] = self.granularity.value
         if self.metrics:
             if len(self.metrics) > 10:
-                if not all(item in METRICS for item in self.metrics):
+                if not all(item in METRICS for item in self.metrics) and self.granularity.value == 'DAY':
                     self.metrics = self.metrics + METRICS_NEW
                     params["conversion_source_types"] = "web,app,offline"
                     params["view_attribution_window"] = "1_DAY"
@@ -485,7 +485,7 @@ class StatsIncremental(Stats, IncrementalMixin):
         start_date_str = stream_state.get(self.cursor_field) if stream_state else self.start_date
         slice_start_date = pendulum.parse(start_date_str)
         end_date = pendulum.parse(self.end_date)
-        slice_start_date = slice_start_date - pendulum.duration(days=30)
+        # slice_start_date = slice_start_date - pendulum.duration(days=30)
         logger.info(f"snapchat ads start_date {slice_start_date}")
         while slice_start_date < end_date:
             slice_end_date_next = slice_start_date + pendulum.duration(days=self.slice_period)
