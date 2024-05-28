@@ -429,14 +429,14 @@ class Stats(SnapchatMarketingStream, ABC):
         params["granularity"] = self.granularity.value
         if self.metrics:
             if len(self.metrics) > 10:
-                if not all(item in METRICS for item in self.metrics) and self.granularity.value == 'DAY':
+                if not all(item in METRICS for item in self.metrics) and self.name == 'ads_stats_daily' and self.granularity.value == 'DAY':
                     self.metrics = self.metrics + METRICS_NEW
                     params["conversion_source_types"] = "web,app,offline"
                     params["view_attribution_window"] = "1_DAY"
                     params["swipe_up_attribution_window"] = "28_DAY"
 
             params["fields"] = ",".join(self.metrics)
-            self.logger.info(f"======xk-test==== params:{params}")
+            self.logger.info(f"======xk-test==== parent_name({self.parent_name}) self_name ({self.name}) , params:({params})")
 
         return params
 
