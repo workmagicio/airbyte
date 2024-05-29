@@ -135,7 +135,6 @@ METRICS_NEW = [
     "conversion_purchases_value_swipe_up",
     "conversion_purchases_view",
     "conversion_purchases_value_view",
-    "conversion_purchases_web_swipe_up",
 ]
 
 logger = logging.getLogger("airbyte")
@@ -429,9 +428,9 @@ class Stats(SnapchatMarketingStream, ABC):
         params["granularity"] = self.granularity.value
         if self.metrics:
             if len(self.metrics) > 10:
-                if not all(item in METRICS for item in self.metrics) and self.name == 'ads_stats_daily' and self.granularity.value == 'DAY':
-                    self.metrics = self.metrics + METRICS_NEW
-                    params["conversion_source_types"] = "web,app,offline"
+                if self.name == 'ads_stats_daily' and self.granularity.value == 'DAY':
+                    self.metrics += [m for m in METRICS_NEW if m not in self.metrics]
+                    params["conversion_source_types"] = "web,app,offline,total"
                     params["view_attribution_window"] = "1_DAY"
                     params["swipe_up_attribution_window"] = "28_DAY"
 
@@ -485,7 +484,7 @@ class StatsIncremental(Stats, IncrementalMixin):
         start_date_str = stream_state.get(self.cursor_field) if stream_state else self.start_date
         slice_start_date = pendulum.parse(start_date_str)
         end_date = pendulum.parse(self.end_date)
-        # slice_start_date = slice_start_date - pendulum.duration(days=30)
+        slice_start_date = slice_start_date - pendulum.duration(days=30)
         logger.info(f"snapchat ads start_date {slice_start_date}")
         while slice_start_date < end_date:
             slice_end_date_next = slice_start_date + pendulum.duration(days=self.slice_period)
@@ -659,7 +658,7 @@ class Hourly(Granularity):
 
     granularity = GranularityType.HOUR
     metrics = METRICS
-    slice_period = 7  # days https://marketingapi.snapchat.com/docs/#metrics-and-supported-granularities
+    slice_period = 3  # days https://marketingapi.snapchat.com/docs/#metrics-and-supported-granularities
 
 
 class Daily(Granularity):
@@ -708,7 +707,7 @@ class Daily(Granularity):
     """
 
     granularity = GranularityType.DAY
-    slice_period = 31  # days https://marketingapi.snapchat.com/docs/#metrics-and-supported-granularities
+    slice_period = 7  # days https://marketingapi.snapchat.com/docs/#metrics-and-supported-granularities
 
 
 class AdaccountsStatsHourly(Hourly, StatsIncremental):
