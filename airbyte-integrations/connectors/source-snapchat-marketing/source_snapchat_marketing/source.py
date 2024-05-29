@@ -427,15 +427,16 @@ class Stats(SnapchatMarketingStream, ABC):
         params = super().request_params(stream_state=stream_state, stream_slice=stream_slice, next_page_token=next_page_token)
         params["granularity"] = self.granularity.value
         if self.metrics:
-            if len(self.metrics) > 10:
-                if self.name == 'ads_stats_daily' and self.granularity.value == 'DAY':
-                    self.metrics += [m for m in METRICS_NEW if m not in self.metrics]
-                    params["conversion_source_types"] = "web,app,offline,total"
-                    params["view_attribution_window"] = "1_DAY"
-                    params["swipe_up_attribution_window"] = "28_DAY"
+            if self.name == 'ads_stats_daily':
+                print("=== xx === add window")
+                params["conversion_source_types"] = "web,app,offline,total"
+                params["view_attribution_window"] = "1_DAY"
+                params["swipe_up_attribution_window"] = "28_DAY"
 
             params["fields"] = ",".join(self.metrics)
-            self.logger.info(f"======xk-test==== parent_name({self.parent_name}) self_name ({self.name}) , params:({params})")
+
+            if self.name == 'ads_stats_daily':
+                self.logger.info(f"======xk-test==== parent_name({self.parent_name}) self_name ({self.name}) , params:({params})")
 
         return params
 
@@ -741,7 +742,7 @@ class AdsStatsDaily(Daily, StatsIncremental):
     """Ads stats with Daily granularity: https://marketingapi.snapchat.com/docs/#get-ad-stats"""
 
     parent = Ads
-
+    metrics = METRICS + METRICS_NEW
 
 class AdsStatsLifetime(Lifetime, Stats):
     """Ads stats with Lifetime granularity: https://marketingapi.snapchat.com/docs/#get-ad-stats"""
