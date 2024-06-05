@@ -143,6 +143,18 @@
         "filter_statuses": []
       },
       "stream_descriptor": {
+        "name": "campaigns_insights_dma"
+      }
+    }
+  },
+  {
+    "type": "STREAM",
+    "stream": {
+      "stream_state": {
+        "date_start": "2121-07-25T13:34:26Z",
+        "filter_statuses": []
+      },
+      "stream_descriptor": {
         "name": "ads_insights_platform_and_device"
       }
     }
