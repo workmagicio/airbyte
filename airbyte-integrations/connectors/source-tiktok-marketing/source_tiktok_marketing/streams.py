@@ -939,3 +939,8 @@ class AdsAudienceReportsByProvince(AdsAudienceReports):
     """Custom reports for ads by province"""
 
     audience_dimensions = ["province_id"]
+
+
+class AdGroupAudienceReportsByDma(AdGroupAudienceReports):
+    """Custom reports for adgroups by dma"""
+    audience_dimensions = ["dma_id"]

@@ -27,6 +27,9 @@
     "country_code": {
       "type": ["null", "string"]
     },
+    "dma_id": {
+      "type": ["null", "string"]
+    },
     "platform": {
       "type": ["null", "string"]
     },
@@ -155,6 +158,9 @@
           "format": "date-time"
         },
         "country_code": {
+          "type": ["null", "string"]
+        },
+        "dma_id": {
           "type": ["null", "string"]
         },
         "campaign_id": {
