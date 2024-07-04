@@ -114,11 +114,11 @@ object JdbcBufferedConsumerFactory {
             val rawSuffix: String =
                 if (
                     it.minimumGenerationId == 0L ||
-                        generationIdHandler.getGenerationIdInTable(
-                            database,
-                            it.id.rawNamespace,
-                            it.id.rawName
-                        ) == it.generationId
+                    generationIdHandler.getGenerationIdInTable(
+                        database,
+                        it.id.rawNamespace,
+                        it.id.rawName
+                    ) == it.generationId
                 ) {
                     AbstractStreamOperation.NO_SUFFIX
                 } else {
@@ -261,6 +261,9 @@ object JdbcBufferedConsumerFactory {
                     pairToWriteConfig.keys
                 )
             }
+            for (record in records) {
+                record.catalog = catalog
+            }
             val writeConfig = pairToWriteConfig.getValue(pair)
             sqlOperations.insertRecords(
                 database,
@@ -288,15 +291,15 @@ object JdbcBufferedConsumerFactory {
                 catalog.streams.forEach {
                     if (
                         it.minimumGenerationId != 0L &&
-                            generationIdHandler.getGenerationIdInTable(
-                                database,
-                                it.id.rawNamespace,
-                                it.id.rawName
-                            ) != it.generationId &&
-                            streamSyncSummaries
-                                .getValue(it.id.asStreamDescriptor())
-                                .terminalStatus ==
-                                AirbyteStreamStatusTraceMessage.AirbyteStreamStatus.COMPLETE
+                        generationIdHandler.getGenerationIdInTable(
+                            database,
+                            it.id.rawNamespace,
+                            it.id.rawName
+                        ) != it.generationId &&
+                        streamSyncSummaries
+                            .getValue(it.id.asStreamDescriptor())
+                            .terminalStatus ==
+                        AirbyteStreamStatusTraceMessage.AirbyteStreamStatus.COMPLETE
                     ) {
                         sqlOperations.overwriteRawTable(database, it.id.rawNamespace, it.id.rawName)
                     }

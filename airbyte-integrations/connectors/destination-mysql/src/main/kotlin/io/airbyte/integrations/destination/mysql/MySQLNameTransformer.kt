@@ -23,22 +23,22 @@ class MySQLNameTransformer : StandardNameTransformer() {
     }
 
     override fun getTmpTableName(streamName: String): String {
-        val tmpTableName = applyDefaultCase(super.getTmpTableName(streamName))
+        val tmpTableName = applyDefaultCase(super.getIdentifier(streamName))
         return truncateName(tmpTableName, TRUNCATION_MAX_NAME_LENGTH)
     }
 
     override fun getRawTableName(streamName: String): String {
-        val rawTableName = applyDefaultCase(super.getRawTableName(streamName))
+        val rawTableName = applyDefaultCase(super.getIdentifier(streamName))
         return truncateName(rawTableName, TRUNCATION_MAX_NAME_LENGTH)
     }
 
     override fun applyDefaultCase(input: String): String {
-        return input.lowercase(Locale.getDefault())
+        return input.lowercase(Locale.getDefault()).trim('_')
     }
 
     companion object {
         // These constants must match those in destination_name_transformer.py
-        const val MAX_MYSQL_NAME_LENGTH: Int = 64
+        const val MAX_MYSQL_NAME_LENGTH: Int = 127
 
         // DBT appends a suffix to table names
         const val TRUNCATE_DBT_RESERVED_SIZE: Int = 12
