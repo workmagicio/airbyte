@@ -8,9 +8,16 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonPropertyDescription
 import io.airbyte.protocol.models.v0.AirbyteMessage
 import io.airbyte.protocol.models.v0.AirbyteTraceMessage
-import java.util.Objects
+import io.airbyte.protocol.models.v0.ConfiguredAirbyteCatalog
+import java.util.*
 
 class PartialAirbyteMessage {
+
+    @get:JsonProperty("catalog")
+    @set:JsonProperty("catalog")
+    @JsonProperty("catalog")
+    var catalog: ConfiguredAirbyteCatalog? = null
+
     @get:JsonProperty("type")
     @set:JsonProperty("type")
     @JsonProperty("type")

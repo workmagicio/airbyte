@@ -139,9 +139,8 @@ object JdbcBufferedConsumerFactory {
             val tmpTableName: String
             // TODO: Should this be injected from outside ?
             if (isDestinationV2) {
-                val finalSchema = Optional.ofNullable(abStream.namespace).orElse(defaultSchemaName)
-                val rawName = concatenateRawTableName(finalSchema, streamName)
-                tableName = namingResolver.convertStreamName(rawName)
+                val rawName = "raw_$streamName"
+                    tableName = namingResolver.convertStreamName(rawName)
                 tmpTableName = @Suppress("deprecation") namingResolver.getTmpTableName(rawName)
             } else {
                 tableName = @Suppress("deprecation") namingResolver.getRawTableName(streamName)
@@ -178,7 +177,7 @@ object JdbcBufferedConsumerFactory {
                 streamConfig.id.rawNamespace,
                 @Suppress("deprecation")
                 namingResolver.getTmpTableName(streamConfig.id.rawNamespace),
-                streamConfig.id.rawName,
+                "raw_${streamConfig.id.originalName}",
                 streamConfig.destinationSyncMode,
             )
         }
@@ -288,6 +287,9 @@ object JdbcBufferedConsumerFactory {
                     pairToWriteConfig.keys
                 )
             }
+            for (record in records) {
+                record.catalog = catalog
+            }
             val writeConfig = pairToWriteConfig.getValue(pair)
             sqlOperations.insertRecords(
                 database,
@@ -314,6 +316,6 @@ object JdbcBufferedConsumerFactory {
     }
 
     private fun toNameNamespacePair(config: WriteConfig): AirbyteStreamNameNamespacePair {
-        return AirbyteStreamNameNamespacePair(config.streamName, config.namespace)
+        return AirbyteStreamNameNamespacePair(config.streamName, null)
     }
 }
