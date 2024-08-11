@@ -1,0 +1,10 @@
+[
+  {
+    "streamDescriptor": {
+      "name": "orders"
+    },
+    "streamState": {
+      "update_time": 1722411881
+    }
+  }
+]

@@ -1,0 +1,144 @@
+{
+  "supportsDBT" : false,
+  "changelogUrl" : "https://docs.airbyte.com/integrations/sources/tiktokShop-seller-partner",
+  "advanced_auth" : {
+    "predicate_key" : [
+      "auth_type"
+    ],
+    "auth_flow_type" : "oauth2.0",
+    "predicate_value" : "oauth2.0",
+    "oauth_config_specification" : {
+      "complete_oauth_output_specification" : {
+        "type" : "object",
+        "properties" : {
+          "refresh_token" : {
+            "type" : "string",
+            "path_in_connector_config" : [
+              "refresh_token"
+            ]
+          }
+        },
+        "additionalProperties" : false
+      },
+      "complete_oauth_server_input_specification" : {
+        "type" : "object",
+        "properties" : {
+          "app_key" : {
+            "type" : "string"
+          },
+          "app_secret" : {
+            "type" : "string"
+          }
+        },
+        "additionalProperties" : false
+      },
+      "complete_oauth_server_output_specification" : {
+        "type" : "object",
+        "properties" : {
+          "app_key" : {
+            "type" : "string",
+            "path_in_connector_config" : [
+              "app_key"
+            ]
+          },
+          "app_secret" : {
+            "type" : "string",
+            "path_in_connector_config" : [
+              "app_secret"
+            ]
+          }
+        },
+        "additionalProperties" : false
+      },
+      "oauth_user_input_from_connector_config_specification" : {
+        "type" : "object",
+        "properties" : {
+          "region" : {
+            "type" : "string",
+            "path_in_connector_config" : [
+              "region"
+            ]
+          },
+          "shop_cipher" : {
+            "type" : "string",
+            "path_in_connector_config" : [
+              "shop_cipher"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "supportsNormalization" : false,
+  "connectionSpecification" : {
+    "type" : "object",
+    "title" : "Tiktok Shop Spec",
+    "required" : [
+      "shop_cipher",
+      "app_key",
+      "app_secret",
+      "refresh_token"
+    ],
+    "properties" : {
+      "app_key" : {
+        "type" : "string",
+        "order" : 1,
+        "title" : "App Key",
+        "description" : "Your Login with TiktokShop Client ID.",
+        "airbyte_secret" : true
+      },
+      "end_date" : {
+        "type" : "string",
+        "order" : 8,
+        "title" : "End Date",
+        "format" : "date-time",
+        "pattern" : "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$|^$",
+        "examples" : [
+          "2024-08-01T00:00:00Z"
+        ],
+        "description" : "UTC date and time in the format 2017-01-25T00:00:00Z. Any data after this date will not be replicated."
+      },
+      "app_secret" : {
+        "type" : "string",
+        "order" : 2,
+        "title" : "App Secret",
+        "description" : "Your Login with TiktokShop Client Secret.",
+        "airbyte_secret" : true
+      },
+      "start_date" : {
+        "type" : "string",
+        "order" : 7,
+        "title" : "Start Date",
+        "format" : "date-time",
+        "pattern" : "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$",
+        "examples" : [
+          "2024-08-01T00:00:00Z"
+        ],
+        "description" : "UTC date and time in the format 2017-01-25T00:00:00Z. Any data before this date will not be replicated. If start date is not provided or older than 2 years ago from today, the date 2 years ago from today will be used."
+      },
+      "shop_cipher" : {
+        "type" : "string",
+        "order" : 4,
+        "title" : "Shop Cipher",
+        "default" : ""
+      },
+      "refresh_token" : {
+        "type" : "string",
+        "order" : 3,
+        "title" : "Refresh Token",
+        "description" : "The Refresh Token obtained via OAuth flow authorization.",
+        "airbyte_secret" : true
+      },
+      "period_in_days" : {
+        "type" : "integer",
+        "order" : 9,
+        "title" : "Period In Days",
+        "default" : 30,
+        "minimum" : 1,
+        "description" : "For syncs spanning a large date range, this option is used to request data in a smaller fixed window to improve sync reliability. This time window can be configured granularly by day."
+      }
+    },
+    "additionalProperties" : true
+  },
+  "supported_destination_sync_modes" : ["append"]
+}
