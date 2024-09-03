@@ -10,6 +10,7 @@ from .common import CatalogModel, Targeting
 
 class DisplayCampaign(CatalogModel):
     campaignId: Decimal
+    date: str
     name: str
     budgetType: str
     budget: Decimal

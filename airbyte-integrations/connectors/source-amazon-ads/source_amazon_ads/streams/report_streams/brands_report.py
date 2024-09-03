@@ -8,97 +8,59 @@ from .products_report import SponsoredProductsReportStream
 from .report_streams import ReportStream
 
 METRICS_MAP = {
-    # "keywords": [
-    #     "campaignName",
-    #     "campaignId",
-    #     "campaignStatus",
-    #     "campaignBudget",
-    #     "campaignBudgetType",
-    #     "campaignRuleBasedBudget",
-    #     "applicableBudgetRuleId",
-    #     "applicableBudgetRuleName",
-    #     "adGroupName",
-    #     "adGroupId",
-    #     "keywordText",
-    #     "keywordBid",
-    #     "keywordStatus",
-    #     "searchTermImpressionRank",
-    #     "matchType",
-    #     "impressions",
-    #     "clicks",
-    #     "cost",
-    #     "attributedDetailPageViewsClicks14d",
-    #     "attributedSales14d",
-    #     "attributedSales14dSameSKU",
-    #     "attributedConversions14d",
-    #     "attributedConversions14dSameSKU",
-    #     "attributedOrdersNewToBrand14d",
-    #     "attributedOrdersNewToBrandPercentage14d",
-    #     "attributedOrderRateNewToBrand14d",
-    #     "attributedSalesNewToBrand14d",
-    #     "attributedSalesNewToBrandPercentage14d",
-    #     "attributedUnitsOrderedNewToBrand14d",
-    #     "attributedUnitsOrderedNewToBrandPercentage14d",
-    #     "unitsSold14d",
-    #     "dpv14d",
-    #     "attributedBrandedSearches14d",
-    #     "keywordId",
-    #     "searchTermImpressionShare",
-    # ],
-    # "adGroups": [
-    #     "campaignName",
-    #     "campaignId",
-    #     "campaignStatus",
-    #     "campaignBudget",
-    #     "campaignBudgetType",
-    #     "adGroupName",
-    #     "adGroupId",
-    #     "impressions",
-    #     "clicks",
-    #     "cost",
-    #     "attributedDetailPageViewsClicks14d",
-    #     "attributedSales14d",
-    #     "attributedSales14dSameSKU",
-    #     "attributedConversions14d",
-    #     "attributedConversions14dSameSKU",
-    #     "attributedOrdersNewToBrand14d",
-    #     "attributedOrdersNewToBrandPercentage14d",
-    #     "attributedOrderRateNewToBrand14d",
-    #     "attributedSalesNewToBrand14d",
-    #     "attributedSalesNewToBrandPercentage14d",
-    #     "attributedUnitsOrderedNewToBrand14d",
-    #     "attributedUnitsOrderedNewToBrandPercentage14d",
-    #     "unitsSold14d",
-    #     "dpv14d",
-    #     "attributedBrandedSearches14d",
-    # ],
     "campaigns": [
-        "campaignName",
-        "campaignId",
-        "campaignStatus",
-        "campaignBudget",
+        "addToCart",
+        "addToCartClicks",
+        "addToCartRate",
+        "brandedSearches",
+        "brandedSearchesClicks",
+        "campaignBudgetAmount",
+        "campaignBudgetCurrencyCode",
         "campaignBudgetType",
-        "campaignRuleBasedBudget",
-        "applicableBudgetRuleId",
-        "applicableBudgetRuleName",
-        "impressions",
+        "campaignId",
+        "campaignName",
+        "campaignStatus",
         "clicks",
         "cost",
-        "attributedDetailPageViewsClicks14d",
-        "attributedSales14d",
-        "attributedSales14dSameSKU",
-        "attributedConversions14d",
-        "attributedConversions14dSameSKU",
-        "attributedOrdersNewToBrand14d",
-        "attributedOrdersNewToBrandPercentage14d",
-        "attributedOrderRateNewToBrand14d",
-        "attributedSalesNewToBrand14d",
-        "attributedSalesNewToBrandPercentage14d",
-        "attributedUnitsOrderedNewToBrand14d",
-        "attributedUnitsOrderedNewToBrandPercentage14d",
-        "unitsSold14d",
-        "dpv14d",
-        "attributedBrandedSearches14d",
+        "costType",
+        "date",
+        "detailPageViews",
+        "detailPageViewsClicks",
+        "eCPAddToCart",
+        "impressions",
+        "newToBrandDetailPageViewRate",
+        "newToBrandDetailPageViews",
+        "newToBrandDetailPageViewsClicks",
+        "newToBrandECPDetailPageView",
+        "newToBrandPurchases",
+        "newToBrandPurchasesClicks",
+        "newToBrandPurchasesPercentage",
+        "newToBrandPurchasesRate",
+        "newToBrandSales",
+        "newToBrandSalesClicks",
+        "newToBrandSalesPercentage",
+        "newToBrandUnitsSold",
+        "newToBrandUnitsSoldClicks",
+        "newToBrandUnitsSoldPercentage",
+        "purchases",
+        "purchasesClicks",
+        "purchasesPromoted",
+        "sales",
+        "salesClicks",
+        "salesPromoted",
+        "topOfSearchImpressionShare",
+        "unitsSold",
+        "unitsSoldClicks",
+        "video5SecondViewRate",
+        "video5SecondViews",
+        "videoCompleteViews",
+        "videoFirstQuartileViews",
+        "videoMidpointViews",
+        "videoThirdQuartileViews",
+        "videoUnmutes",
+        "viewabilityRate",
+        "viewableImpressions",
+        "viewClickThroughRate",
     ],
 }
 
@@ -120,7 +82,7 @@ class SponsoredBrandsReportStream(ReportStream):
     metrics_map = METRICS_MAP
     metrics_type_to_id_map = METRICS_TYPE_TO_ID_MAP
 
-    def _get_init_report_body(self, report_date: str, record_type: str, profile):
+    def _get_init_report_body(self, start_date: str, report_date: str, record_type: str, profile):
         metrics_list = self.metrics_map[record_type]
         body = {
             "reportDate": report_date,
@@ -150,7 +112,7 @@ METRICS_MAP_V3 = {
 }
 
 METRICS_TYPE_TO_ID_MAP_V3 = {
-    "purchasedAsin": "purchasedAsin",
+    "campaigns": "campaignId",
 }
 
 
@@ -163,29 +125,29 @@ class SponsoredBrandsV3ReportStream(SponsoredProductsReportStream):
     REPORT_DATE_FORMAT = "YYYY-MM-DD"
     ad_product = "SPONSORED_BRANDS"
     report_is_created = HTTPStatus.OK
-    metrics_map = METRICS_MAP_V3
+    metrics_map = METRICS_MAP
     metrics_type_to_id_map = METRICS_TYPE_TO_ID_MAP_V3
 
-    def _get_init_report_body(self, report_date: str, record_type: str, profile):
+    def _get_init_report_body(self, start_date: str, end_date: str, record_type: str, profile):
         metrics_list = self.metrics_map[record_type]
 
-        reportTypeId = "sbPurchasedProduct"
-        group_by = ["purchasedAsin"]
+        reportTypeId = "sbCampaigns"
+        group_by = ["campaign"]
 
         body = {
-            "name": f"{record_type} report {report_date}",
-            "startDate": report_date,
-            "endDate": report_date,
+            "name": f"{record_type} {profile.profileId} report {start_date} to {end_date}",
+            "startDate": start_date,
+            "endDate": end_date,
             "configuration": {
                 "adProduct": self.ad_product,
                 "groupBy": group_by,
                 "columns": metrics_list,
                 "reportTypeId": reportTypeId,
                 "filters": [],
-                "timeUnit": "SUMMARY",
+                "timeUnit": "DAILY",
                 "format": "GZIP_JSON",
             },
         }
 
-        print(f"xk-debug: {body}")
+        print(f"xk-debug-brands: {body}")
         yield body

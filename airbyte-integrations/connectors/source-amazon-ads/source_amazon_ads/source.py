@@ -45,7 +45,9 @@ from .streams import (
 )
 
 # Oauth 2.0 authentication URL for amazon
+# TOKEN_URL = "http://127.0.0.1:8681/auth/o2/token"
 TOKEN_URL = "https://api.amazon.com/auth/o2/token"
+# TOKEN_URL = "http://47.90.138.142:8681/auth/o2/token"
 CONFIG_DATE_FORMAT = "YYYY-MM-DD"
 
 

@@ -28,6 +28,7 @@ class Creative(CatalogModel):
 
 class BrandsCampaign(CatalogModel):
     campaignId: str
+    date: str
     name: str
     tags: Dict[str, str]
     budget: Decimal

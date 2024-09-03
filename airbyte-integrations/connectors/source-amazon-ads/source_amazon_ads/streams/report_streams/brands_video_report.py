@@ -131,13 +131,15 @@ class SponsoredBrandsVideoReportStream(ReportStream):
     https://advertising.amazon.com/API/docs/en-us/reference/sponsored-brands/2/reports
     """
 
+    primary_key = ["profileId", "recordType", "reportDate", "recordId"]
+
     def report_init_endpoint(self, record_type: str) -> str:
         return f"/v2/hsa/{record_type}/report"
 
     metrics_map = METRICS_MAP
     metrics_type_to_id_map = METRICS_TYPE_TO_ID_MAP
 
-    def _get_init_report_body(self, report_date: str, record_type: str, profile):
+    def _get_init_report_body(self, start_date: str, report_date: str, record_type: str, profile):
         metrics_list = self.metrics_map[record_type]
         body = {
             "reportDate": report_date,

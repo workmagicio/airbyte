@@ -21,6 +21,7 @@ class Bidding(CatalogModel):
 class ProductCampaign(CatalogModel):
     portfolioId: str
     campaignId: str
+    date: str
     name: str
     tags: Dict[str, str]
     targetingType: str
