@@ -1,0 +1,85 @@
+{
+  "properties": {
+    "account_currency": {
+      "description": "Currency used for the account",
+      "type": ["null", "string"]
+    },
+    "account_id": {
+      "description": "ID of the account",
+      "type": ["null", "string"]
+    },
+    "account_name": {
+      "description": "Name of the account",
+      "type": ["null", "string"]
+    },
+    "campaign_id": {
+      "description": "ID of the campaign",
+      "type": ["null", "string"]
+    },
+    "campaign_name": {
+      "description": "Name of the campaign",
+      "type": ["null", "string"]
+    },
+    "clicks": {
+      "description": "Total number of clicks",
+      "type": ["null", "integer"]
+    },
+    "created_time": {
+      "description": "Time when the data was created",
+      "format": "date",
+      "type": ["null", "string"]
+    },
+    "date_start": {
+      "description": "Start date of the data",
+      "format": "date",
+      "type": ["null", "string"]
+    },
+    "date_stop": {
+      "description": "End date of the data",
+      "format": "date",
+      "type": ["null", "string"]
+    },
+    "frequency": {
+      "description": "Average number of times each person saw the ad",
+      "type": ["null", "number"]
+    },
+    "full_view_impressions": {
+      "description": "Impressions when the ad is fully viewed",
+      "type": ["null", "number"]
+    },
+    "full_view_reach": {
+      "description": "Reach when the ad is fully viewed",
+      "type": ["null", "number"]
+    },
+    "impressions": {
+      "description": "Total number of impressions",
+      "type": ["null", "integer"]
+    },
+    "objective": {
+      "description": "Marketing objective",
+      "type": ["null", "string"]
+    },
+    "reach": {
+      "description": "Number of people who saw the ad",
+      "type": ["null", "integer"]
+    },
+    "social_spend": {
+      "description": "Spend in social channels",
+      "type": ["null", "number"]
+    },
+    "spend": {
+      "description": "Total amount spent",
+      "type": ["null", "number"]
+    },
+    "unique_clicks": {
+      "description": "Total number of unique clicks",
+      "type": ["null", "integer"]
+    },
+    "updated_time": {
+      "description": "Time when the data was updated",
+      "format": "date",
+      "type": ["null", "string"]
+    }
+  },
+  "type": ["null", "object"]
+}

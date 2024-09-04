@@ -32,6 +32,7 @@ from .streams import (
     CustomAudiences,
     CustomConversions,
     Images,
+    CampaignsInsightsDma,
     Videos,
 )
 
@@ -66,4 +67,5 @@ __all__ = [
     "Images",
     "Videos",
     "Activities",
+    "CampaignsInsightsDma",
 ]
