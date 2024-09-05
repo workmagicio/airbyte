@@ -1,4 +1,4 @@
-# MySQL Migration Guide
+# AnalyticDB For MySQL Migration Guide
 
 ## Upgrading to 1.0.0
 
