@@ -54,6 +54,7 @@ class AnalyticdbForMysqlSqlOperations : MySQLSqlOperations() {
             val hash: String,
         )
 
+        LOGGER.info("database: {}", database)
         LOGGER.info("database source config: {}", database.sourceConfig)
         LOGGER.info("database database config: {}", database.databaseConfig)
 
@@ -67,16 +68,38 @@ class AnalyticdbForMysqlSqlOperations : MySQLSqlOperations() {
 
         var records =
             origins.mapNotNull { record ->
+                LOGGER.info("record: {}", record)
                 LOGGER.info("record stream descriptor: {}", record.state?.stream?.streamDescriptor)
 
                 val node = (record.record?.data ?: Jsons.emptyObject()) as ObjectNode
+
+                LOGGER.info("node: {}", node)
+
                 node.put("tenant_id", tenantId)
+
+                LOGGER.info("node: {}", node)
+
                 val meta = ((record.record?.meta?.let { Jsons.jsonNode(it) }
                     ?: Jsons.emptyObject()) as ObjectNode)
+
+                LOGGER.info("meta: {}", meta)
+
                 meta.put("tenant_id", tenantId)
+
+                LOGGER.info("meta: {}", meta)
+
                 val data = Jsons.serialize(node)
+
+                LOGGER.info("data: {}", data)
+
                 val hash = hash(data)
+
+                LOGGER.info("hash: {}", hash)
+
                 meta.put("hash", hash)
+
+                LOGGER.info("meta: {}", meta)
+
                 val id = Random.nextLong().toString()
 //                val id =
 //                    record.catalog
@@ -95,6 +118,8 @@ class AnalyticdbForMysqlSqlOperations : MySQLSqlOperations() {
                 }
             }
 
+        LOGGER.info("records: {}", records)
+
         val results =
             database.queryJsons(
                 """
@@ -110,25 +135,37 @@ class AnalyticdbForMysqlSqlOperations : MySQLSqlOperations() {
                 """.trimIndent(),
                 * records.map { it.id }.toTypedArray(),
             )
+
+        LOGGER.info("results: {}", results)
+
         val hashmap =
             results.associate { x ->
                 x["id"].asText() to Jsons.deserialize(x["meta"].asText()).path("hash").asText()
             }
 
+        LOGGER.info("hashmap: {}", hashmap)
+
         records = records.filter { x -> x.hash != hashmap[x.id] }
 
+        LOGGER.info("records: {}", records)
+
         val params = records.flatMap { x -> listOf(x.id, x.meta, x.data) }
+
+        LOGGER.info("params: {}", params)
 
         val insert =
             """
             replace into $schema.$table (
                 ${JavaBaseConstants.COLUMN_NAME_AB_RAW_ID},
                 ${JavaBaseConstants.COLUMN_NAME_AB_META},
-                ${JavaBaseConstants.COLUMN_NAME_DATA})
+                ${JavaBaseConstants.COLUMN_NAME_DATA}
+            )
             values ${
-                List(records.size) { "(?, cast(? as json), cast(? as json))" }.joinToString(", ")
+                List(records.size) { "(?, ?, ?)" }.joinToString(", ")
             }
             """.trimIndent()
+
+        LOGGER.info("insert: {}", insert)
 
         database.execute { connection: Connection ->
             try {

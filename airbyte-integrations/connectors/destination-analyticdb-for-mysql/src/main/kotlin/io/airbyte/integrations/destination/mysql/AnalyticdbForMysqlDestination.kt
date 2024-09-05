@@ -43,6 +43,7 @@ class AnalyticdbForMysqlDestination :
         @Throws(Exception::class)
         fun main(args: Array<String>) {
             val destination = AnalyticdbForMysqlDestination()
+            LOGGER.info("build 2024-09-05 19:00:00")
             LOGGER.info("starting destination: {}", AnalyticdbForMysqlDestination::class.java)
             try {
                 IntegrationRunner(destination).run(args)
