@@ -4,6 +4,7 @@
 package io.airbyte.integrations.destination.mysql
 
 import io.airbyte.cdk.integrations.destination.StandardNameTransformer
+import java.util.*
 
 class AnalyticdbForMysqlNameTransformer : StandardNameTransformer() {
     override fun getIdentifier(name: String): String {

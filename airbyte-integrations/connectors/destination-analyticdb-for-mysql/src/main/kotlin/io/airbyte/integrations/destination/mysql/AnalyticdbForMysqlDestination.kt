@@ -4,21 +4,19 @@
 package io.airbyte.integrations.destination.mysql
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.google.common.collect.ImmutableMap
 import io.airbyte.cdk.integrations.base.Destination
 import io.airbyte.cdk.integrations.base.IntegrationRunner
+import io.airbyte.cdk.integrations.destination.NamingConventionTransformer
 import io.airbyte.protocol.models.v0.AirbyteConnectionStatus
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 class AnalyticdbForMysqlDestination :
-    MySQLDestination,
+    MySQLDestination(AnalyticdbForMysqlSqlOperations()),
     Destination {
+
     override val namingResolver: NamingConventionTransformer
         get() = AnalyticdbForMysqlNameTransformer()
-
-    override fun getSqlOperations(config: JsonNode): SqlOperations =
-        AnalyticdbForMysqlSqlOperations(config)
 
     // override fun spec(): ConnectorSpecification {
     //     val spec: ConnectorSpecification = Jsons.clone(super.spec())
@@ -37,21 +35,9 @@ class AnalyticdbForMysqlDestination :
         return AirbyteConnectionStatus().withStatus(AirbyteConnectionStatus.Status.SUCCEEDED)
     }
 
-    public override fun getDefaultConnectionProperties(config: JsonNode): Map<String, String> =
-        super.getDefaultConnectionProperties(config) + MORE_JDBC_PARAMETERS
-
     companion object {
         private val LOGGER: Logger =
-            LoggerFactory.getLogger(
-                AnalyticdbForMysqlDestination::class.java,
-            )
-
-        @JvmField
-        val MORE_JDBC_PARAMETERS: Map<String, String> =
-            ImmutableMap.of(
-                "serverTimezone",
-                "UTC",
-            )
+            LoggerFactory.getLogger(AnalyticdbForMysqlDestination::class.java)
 
         @JvmStatic
         @Throws(Exception::class)
@@ -61,7 +47,7 @@ class AnalyticdbForMysqlDestination :
             try {
                 IntegrationRunner(destination).run(args)
             } catch (e: Exception) {
-                MySQLDestination.handleException(e)
+                handleException(e)
             }
             LOGGER.info("complete destination: {}", AnalyticdbForMysqlDestination::class.java)
         }

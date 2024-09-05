@@ -14,9 +14,12 @@ import io.airbyte.cdk.integrations.base.Destination
 import io.airbyte.cdk.integrations.base.IntegrationRunner
 import io.airbyte.cdk.integrations.base.errors.messages.ErrorMessage
 import io.airbyte.cdk.integrations.base.ssh.SshWrappedDestination
+import io.airbyte.cdk.integrations.destination.NamingConventionTransformer
 import io.airbyte.cdk.integrations.destination.PropertyNameSimplifyingDataTransformer
 import io.airbyte.cdk.integrations.destination.async.deser.StreamAwareDataTransformer
 import io.airbyte.cdk.integrations.destination.jdbc.AbstractJdbcDestination
+import io.airbyte.cdk.integrations.destination.jdbc.JdbcBufferedConsumerFactory
+import io.airbyte.cdk.integrations.destination.jdbc.SqlOperations
 import io.airbyte.cdk.integrations.destination.jdbc.typing_deduping.JdbcDestinationHandler
 import io.airbyte.cdk.integrations.destination.jdbc.typing_deduping.JdbcSqlGenerator
 import io.airbyte.commons.exceptions.ConfigErrorException
@@ -38,11 +41,11 @@ import java.util.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-class MySQLDestination :
+open class MySQLDestination(sqlOperations: SqlOperations = MySQLSqlOperations()) :
     AbstractJdbcDestination<MinimumDestinationState>(
         DRIVER_CLASS,
         MySQLNameTransformer(),
-        MySQLSqlOperations()
+        sqlOperations,
     ),
     Destination {
     override val configSchemaKey: String

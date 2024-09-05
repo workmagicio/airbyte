@@ -24,7 +24,7 @@ import org.jooq.impl.DSL
     justification =
         "There is little chance of SQL injection. There is also little need for statement reuse. The basic statement is more readable than the prepared statement."
 )
-class MySQLSqlOperations : JdbcSqlOperations() {
+open class MySQLSqlOperations : JdbcSqlOperations() {
     private var isLocalFileEnabled = false
 
     @Throws(Exception::class)
