@@ -18,18 +18,6 @@ class AnalyticdbForMysqlDestination :
     override val namingResolver: NamingConventionTransformer
         get() = AnalyticdbForMysqlNameTransformer()
 
-    // override fun spec(): ConnectorSpecification {
-    //     val spec: ConnectorSpecification = Jsons.clone(super.spec())
-    //     val prop = spec.connectionSpecification["properties"] as ObjectNode
-    //     prop
-    //         .putObject(AnalyticdbForMysqlDestination.TENANT_ID_KEY)
-    //         .put("title", "Tenant Id")
-    //         .put("description", "Tenant Id")
-    //         .put("type", "string")
-    //         .put("order", prop.size())
-    //     return modifySpec(super.spec())
-    // }
-
     override fun check(config: JsonNode): AirbyteConnectionStatus {
         LOGGER.info("config: {}", config)
         return AirbyteConnectionStatus().withStatus(AirbyteConnectionStatus.Status.SUCCEEDED)
@@ -43,7 +31,7 @@ class AnalyticdbForMysqlDestination :
         @Throws(Exception::class)
         fun main(args: Array<String>) {
             val destination = AnalyticdbForMysqlDestination()
-            LOGGER.info("build 2024-09-05 19:00:00")
+            LOGGER.info("build 2024-09-06 11:00:00")
             LOGGER.info("starting destination: {}", AnalyticdbForMysqlDestination::class.java)
             try {
                 IntegrationRunner(destination).run(args)

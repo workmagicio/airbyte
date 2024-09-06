@@ -58,7 +58,6 @@ class AnalyticdbForMysqlSqlOperations : MySQLSqlOperations() {
         LOGGER.info("database source config: {}", database.sourceConfig)
         LOGGER.info("database database config: {}", database.databaseConfig)
 
-        // todo
 //        val config = Jsons.deserialize("""{}""")
 
 //        val tenantId =
@@ -71,27 +70,25 @@ class AnalyticdbForMysqlSqlOperations : MySQLSqlOperations() {
                 LOGGER.info("record: {}", record)
                 LOGGER.info("record stream descriptor: {}", record.state?.stream?.streamDescriptor)
 
-                val node = (record.record?.data ?: Jsons.emptyObject()) as ObjectNode
+                val node = Jsons.deserialize(record.serialized ?: "{}") as ObjectNode
 
                 LOGGER.info("node: {}", node)
 
-                node.put("tenant_id", tenantId)
+                node.put("x_tenant_id", tenantId)
 
                 LOGGER.info("node: {}", node)
-
-                // val meta = ((record.record?.meta?.let { Jsons.jsonNode(it) }
-                //     ?: Jsons.emptyObject()) as ObjectNode)
-                val meta = Jsons.jsonNode(record.record?.meta ?: Jsons.emptyObject()) as ObjectNode
-
-                LOGGER.info("meta: {}", meta)
-
-                meta.put("tenant_id", tenantId)
-
-                LOGGER.info("meta: {}", meta)
 
                 val data = Jsons.serialize(node)
 
                 LOGGER.info("data: {}", data)
+
+                val meta = Jsons.jsonNode(record.record?.meta ?: Jsons.emptyObject()) as ObjectNode
+
+                LOGGER.info("meta: {}", meta)
+
+                meta.put("x_tenant_id", tenantId)
+
+                LOGGER.info("meta: {}", meta)
 
                 val hash = hash(data)
 
@@ -101,7 +98,8 @@ class AnalyticdbForMysqlSqlOperations : MySQLSqlOperations() {
 
                 LOGGER.info("meta: {}", meta)
 
-                val id = Random.nextLong().toString()
+                val id = Random.nextLong(Long.MAX_VALUE).toString()
+
 //                val id =
 //                    record.catalog
 //                        ?.streams
@@ -111,6 +109,7 @@ class AnalyticdbForMysqlSqlOperations : MySQLSqlOperations() {
 //                                .map { data[it]?.asText() ?: "" } // todo deep take
 //                                ?.joinToString("|")
 //                        }
+
                 if (id == null) {
                     LOGGER.warn("invalid primary key $record")
                     null
