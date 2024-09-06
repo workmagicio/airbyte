@@ -41,10 +41,13 @@ import java.util.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-open class MySQLDestination(sqlOperations: SqlOperations = MySQLSqlOperations()) :
+open class MySQLDestination(
+    namingResolver: NamingConventionTransformer = MySQLNameTransformer(),
+    sqlOperations: SqlOperations = MySQLSqlOperations(),
+) :
     AbstractJdbcDestination<MinimumDestinationState>(
         DRIVER_CLASS,
-        MySQLNameTransformer(),
+        namingResolver,
         sqlOperations,
     ),
     Destination {
