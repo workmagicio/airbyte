@@ -22,8 +22,8 @@ class AnalyticdbForMysqlSqlOperations : MySQLSqlOperations() {
     override fun insertRecordsInternalV2(
         database: JdbcDatabase,
         records: List<PartialAirbyteMessage>,
-        schema: String?,
-        table: String?,
+        schemaName: String?,
+        tableName: String?,
     ) {
         if (records.isEmpty()) {
             return
@@ -32,8 +32,8 @@ class AnalyticdbForMysqlSqlOperations : MySQLSqlOperations() {
             loadDataIntoTable(
                 database,
                 records,
-                schema,
-                table,
+                schemaName,
+                tableName,
             )
         } catch (e: IOException) {
             throw SQLException(e)
@@ -59,7 +59,7 @@ class AnalyticdbForMysqlSqlOperations : MySQLSqlOperations() {
         LOGGER.info("database database config: {}", database.databaseConfig)
 
         // todo
-//        val config: JsonNode = Jsons.deserialize("""{}""")
+//        val config = Jsons.deserialize("""{}""")
 
 //        val tenantId =
 //            JdbcUtils.parseJdbcParameters(config, JdbcUtils.JDBC_URL_PARAMS_KEY)["x_tenant_id"]
@@ -79,8 +79,9 @@ class AnalyticdbForMysqlSqlOperations : MySQLSqlOperations() {
 
                 LOGGER.info("node: {}", node)
 
-                val meta = ((record.record?.meta?.let { Jsons.jsonNode(it) }
-                    ?: Jsons.emptyObject()) as ObjectNode)
+                // val meta = ((record.record?.meta?.let { Jsons.jsonNode(it) }
+                //     ?: Jsons.emptyObject()) as ObjectNode)
+                val meta = Jsons.jsonNode(record.record?.meta ?: Jsons.emptyObject()) as ObjectNode
 
                 LOGGER.info("meta: {}", meta)
 

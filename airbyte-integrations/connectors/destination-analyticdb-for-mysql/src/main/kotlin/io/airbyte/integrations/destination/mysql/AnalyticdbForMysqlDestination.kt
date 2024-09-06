@@ -50,7 +50,7 @@ class AnalyticdbForMysqlDestination :
             } catch (e: Exception) {
                 handleException(e)
             }
-            LOGGER.info("complete destination: {}", AnalyticdbForMysqlDestination::class.java)
+            LOGGER.info("finished destination: {}", AnalyticdbForMysqlDestination::class.java)
         }
     }
 }
