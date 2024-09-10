@@ -19,6 +19,8 @@ import io.airbyte.cdk.integrations.base.ssh.SshWrappedDestination
 import io.airbyte.cdk.integrations.destination.PropertyNameSimplifyingDataTransformer
 import io.airbyte.cdk.integrations.destination.async.deser.StreamAwareDataTransformer
 import io.airbyte.cdk.integrations.destination.jdbc.AbstractJdbcDestination
+import io.airbyte.cdk.integrations.destination.jdbc.JdbcGenerationHandler
+import io.airbyte.cdk.integrations.destination.jdbc.SqlOperations
 import io.airbyte.cdk.integrations.destination.jdbc.typing_deduping.JdbcDestinationHandler
 import io.airbyte.cdk.integrations.destination.jdbc.typing_deduping.JdbcSqlGenerator
 import io.airbyte.commons.exceptions.ConfigErrorException
@@ -44,8 +46,7 @@ import org.slf4j.LoggerFactory
 class MySQLDestination :
     AbstractJdbcDestination<MinimumDestinationState>(
         DRIVER_CLASS,
-        MySQLNameTransformer(),
-        MySQLSqlOperations()
+        MySQLNameTransformer()
     ),
     Destination {
     override val configSchemaKey: String
@@ -61,7 +62,7 @@ class MySQLDestination :
         val dataSource = getDataSource(config)
         try {
             val database = getDatabase(dataSource)
-            val mySQLSqlOperations = sqlOperations as MySQLSqlOperations
+            val mySQLSqlOperations = getSqlOperations(config) as MySQLSqlOperations
 
             val outputSchema: String =
                 namingResolver.getIdentifier(config[JdbcUtils.DATABASE_KEY].asText())
@@ -149,12 +150,22 @@ class MySQLDestination :
         return MysqlSqlGenerator()
     }
 
+    override fun getSqlOperations(config: JsonNode): SqlOperations {
+        val wmTenantId = config.get("wm_tenant_id").asLong();
+        return MySQLSqlOperations(wmTenantId);
+    }
+
+    override fun getGenerationHandler(): JdbcGenerationHandler {
+        return MySQLGenerationHandler();
+    }
+
     override fun getDestinationHandler(
+        config: JsonNode,
         databaseName: String,
         database: JdbcDatabase,
-        rawTableSchema: String
+        rawTableSchema: String,
     ): JdbcDestinationHandler<MinimumDestinationState> {
-        return MysqlDestinationHandler(database, rawTableSchema)
+        return MysqlDestinationHandler(database, rawTableSchema, getGenerationHandler())
     }
 
     override fun getMigrations(

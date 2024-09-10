@@ -532,6 +532,13 @@ class Action(Enum):
     FAIL = 'FAIL'
     RETRY = 'RETRY'
     IGNORE = 'IGNORE'
+    RATE_LIMITED = 'RATE_LIMITED'
+
+
+class FailureType(Enum):
+    system_error = 'system_error'
+    config_error = 'config_error'
+    transient_error = 'transient_error'
 
 
 class HttpResponseFilter(BaseModel):
@@ -539,8 +546,14 @@ class HttpResponseFilter(BaseModel):
     action: Optional[Action] = Field(
         None,
         description='Action to execute if a response matches the filter.',
-        examples=['SUCCESS', 'FAIL', 'RETRY', 'IGNORE'],
+        examples=['SUCCESS', 'FAIL', 'RETRY', 'IGNORE', 'RATE_LIMITED'],
         title='Action',
+    )
+    failure_type: Optional[FailureType] = Field(
+        None,
+        description='Failure type of traced exception if a response matches the filter.',
+        examples=['system_error', 'config_error', 'transient_error'],
+        title='Failure Type',
     )
     error_message: Optional[str] = Field(
         None,
@@ -594,6 +607,14 @@ class JsonFileSchemaLoader(BaseModel):
 
 class JsonDecoder(BaseModel):
     type: Literal['JsonDecoder']
+
+
+class JsonlDecoder(BaseModel):
+    type: Literal['JsonlDecoder']
+
+
+class IterableDecoder(BaseModel):
+    type: Literal['IterableDecoder']
 
 
 class MinMaxDatetime(BaseModel):
@@ -881,6 +902,12 @@ class WaitTimeFromHeader(BaseModel):
         examples=['([-+]?\\d+)'],
         title='Extraction Regex',
     )
+    max_waiting_time_in_seconds: Optional[float] = Field(
+        None,
+        description='Given the value extracted from the header is greater than this value, stop the stream.',
+        examples=[3600],
+        title='Max Waiting Time in Seconds',
+    )
     parameters: Optional[Dict[str, Any]] = Field(None, alias='$parameters')
 
 
@@ -1080,6 +1107,11 @@ class DatetimeBasedCursor(BaseModel):
         description='Set to True if the target API does not accept queries where the start time equal the end time.',
         title='Whether to skip requests if the start time equals the end time',
     )
+    global_substream_cursor: Optional[bool] = Field(
+        False,
+        description='This setting optimizes performance when the parent stream has thousands of partitions by storing the cursor as a single value rather than per partition. Notably, the substream state is updated only at the end of the sync, which helps prevent data loss in case of a sync failure. See more info in the [docs](https://docs.airbyte.com/connector-development/config-based/understanding-the-yaml-file/incremental-syncs).',
+        title='Whether to store cursor as one value instead of per partition',
+    )
     lookback_window: Optional[str] = Field(
         None,
         description='Time interval before the start_datetime to read data for, e.g. P1M for looking back one month.',
@@ -1175,10 +1207,8 @@ class DpathExtractor(BaseModel):
         ],
         title='Field Path',
     )
-    decoder: Optional[JsonDecoder] = Field(
-        None,
-        description='Component decoding the response so records can be extracted.',
-        title='Decoder',
+    decoder: Optional[Union[JsonDecoder, JsonlDecoder, IterableDecoder]] = Field(
+        None, title='Decoder'
     )
     parameters: Optional[Dict[str, Any]] = Field(None, alias='$parameters')
 
@@ -1277,6 +1307,10 @@ class DeclarativeSource(BaseModel):
     metadata: Optional[Dict[str, Any]] = Field(
         None,
         description='For internal Airbyte use only - DO NOT modify manually. Used by consumers of declarative manifests for storing related metadata.',
+    )
+    description: Optional[str] = Field(
+        None,
+        description='A description of the connector. It will be presented on the Source documentation page.',
     )
 
 
@@ -1569,6 +1603,11 @@ class SimpleRetriever(BaseModel):
         [],
         description='PartitionRouter component that describes how to partition the stream, enabling incremental syncs and checkpointing.',
         title='Partition Router',
+    )
+    decoder: Optional[Union[JsonDecoder, JsonlDecoder, IterableDecoder]] = Field(
+        None,
+        description='Component decoding the response so records can be extracted.',
+        title='Decoder',
     )
     parameters: Optional[Dict[str, Any]] = Field(None, alias='$parameters')
 

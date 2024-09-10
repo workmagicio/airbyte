@@ -11,13 +11,13 @@ import io.airbyte.integrations.base.destination.typing_deduping.AirbyteProtocolT
 import io.airbyte.integrations.base.destination.typing_deduping.AirbyteType
 import io.airbyte.integrations.base.destination.typing_deduping.Array
 import io.airbyte.integrations.base.destination.typing_deduping.ColumnId
+import io.airbyte.integrations.base.destination.typing_deduping.ImportType
 import io.airbyte.integrations.base.destination.typing_deduping.Sql
 import io.airbyte.integrations.base.destination.typing_deduping.StreamConfig
 import io.airbyte.integrations.base.destination.typing_deduping.StreamId
 import io.airbyte.integrations.base.destination.typing_deduping.StreamId.Companion.concatenateRawTableName
 import io.airbyte.integrations.base.destination.typing_deduping.Struct
 import io.airbyte.integrations.destination.mysql.MySQLNameTransformer
-import io.airbyte.protocol.models.v0.DestinationSyncMode
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
@@ -25,10 +25,7 @@ import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeFormatterBuilder
 import java.util.Locale
 import java.util.Optional
-import java.util.function.Function
 import java.util.stream.Collectors
-import java.util.stream.Collectors.toSet
-import java.util.stream.Stream
 import org.jooq.Condition
 import org.jooq.DataType
 import org.jooq.Field
@@ -36,15 +33,12 @@ import org.jooq.Name
 import org.jooq.Param
 import org.jooq.SQLDialect
 import org.jooq.SortField
-import org.jooq.conf.ParamType
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL.cast
-import org.jooq.impl.DSL.castNull
 import org.jooq.impl.DSL.field
 import org.jooq.impl.DSL.name
 import org.jooq.impl.DSL.quotedName
 import org.jooq.impl.DSL.sql
-import org.jooq.impl.DSL.table
 import org.jooq.impl.DefaultDataType
 import org.jooq.impl.SQLDataType
 
@@ -209,101 +203,13 @@ class MysqlSqlGenerator : JdbcSqlGenerator(namingTransformer = MySQLNameTransfor
         // mysql supports this. So we'll just create the indexes afterward.
         // Fortunately, adding indexes to an empty table is pretty cheap.
         val statements: MutableList<Sql> = ArrayList()
-        val finalTableName: Name = name(stream.id.finalNamespace, stream.id.finalName + suffix)
 
         statements.add(super.createTable(stream, suffix, force))
-
-        // jooq tries to autogenerate the name if you just do createIndex(), but it creates a
-        // fully-qualified
-        // name, which isn't valid mysql syntax.
-        // mysql indexes only need to unique per-table, so we can just hardcode some names here.
-        if (stream.destinationSyncMode === DestinationSyncMode.APPEND_DEDUP) {
-            // An index for our ROW_NUMBER() PARTITION BY pk ORDER BY cursor, extracted_at function
-            val indexColumns: List<Field<*>> =
-                Stream.of(
-                        stream.primaryKey.stream().map { pk ->
-                            getIndexColumnField(
-                                pk,
-                                stream.columns[pk]!!,
-                            )
-                        }, // if cursor is present, then a stream containing its name
-                        // but if no cursor, then empty stream
-                        stream.cursor.stream().map { cursor ->
-                            getIndexColumnField(
-                                cursor,
-                                stream.columns[cursor]!!,
-                            )
-                        },
-                        Stream.of<Field<Any>>(
-                            field(name(JavaBaseConstants.COLUMN_NAME_AB_EXTRACTED_AT))
-                        ),
-                    )
-                    .flatMap(Function.identity())
-                    // Remove duplicates. It's theoretically possible for a stream to declare the
-                    // PK and cursor to be the same column,
-                    // and mysql complains if an index declares the same column twice.
-                    .collect(toSet())
-                    .toList()
-            statements.add(
-                Sql.of(
-                    dslContext
-                        .createIndex("dedup_idx")
-                        .on(
-                            table(finalTableName),
-                            indexColumns,
-                        )
-                        .sql,
-                ),
-            )
+        if (stream.postImportAction == ImportType.DEDUPE) {
+            throw UnsupportedOperationException("ADB do not support APPEND_DEDUP")
         }
-        statements.add(
-            Sql.of(
-                dslContext
-                    .createIndex("extracted_at_idx")
-                    .on(
-                        finalTableName,
-                        name(JavaBaseConstants.COLUMN_NAME_AB_EXTRACTED_AT),
-                    )
-                    .sql,
-            ),
-        )
-
-        statements.add(
-            Sql.of(
-                dslContext
-                    .createIndex("raw_id_idx")
-                    .on(
-                        finalTableName,
-                        name(JavaBaseConstants.COLUMN_NAME_AB_RAW_ID),
-                    )
-                    .sql,
-            ),
-        )
 
         return Sql.concat(statements)
-    }
-
-    private fun getIndexColumnField(column: ColumnId, airbyteType: AirbyteType): Field<*> {
-        // mysql restricts the total key length of an index, and our varchar/text columns alone
-        // would
-        // exceed that limit. So we restrict the index to only looking at the first 50 chars of
-        // varchar/text columns.
-        // jooq doesn't support this syntax, so we have to build it manually.
-        val dialectType: DataType<*> = toDialectType(airbyteType)
-        val typeName: String = dialectType.typeName
-        if (
-            "varchar".equals(typeName, ignoreCase = true) ||
-                "text".equals(typeName, ignoreCase = true) ||
-                "clob".equals(typeName, ignoreCase = true)
-        ) {
-            // this produces something like `col_name`(50)
-            // so the overall create index statement is roughly
-            // CREATE INDEX foo ON `the_table` (`col_name`(50), ...)
-            val colDecl: String = dslContext.render(quotedName(column.name)) + "(" + 50 + ")"
-            return field(sql(colDecl))
-        } else {
-            return field(quotedName(column.name))
-        }
     }
 
     override fun buildAirbyteMetaColumn(columns: LinkedHashMap<ColumnId, AirbyteType>): Field<*> {
@@ -321,12 +227,13 @@ class MysqlSqlGenerator : JdbcSqlGenerator(namingTransformer = MySQLNameTransfor
     override fun getFinalTableMetaColumns(
         includeMetaColumn: Boolean
     ): LinkedHashMap<String, DataType<*>> {
-        val metaColumns: LinkedHashMap<String, DataType<*>> =
-            super.getFinalTableMetaColumns(includeMetaColumn)
-        // Override this column to be a TIMESTAMP instead of VARCHAR
-        metaColumns[JavaBaseConstants.COLUMN_NAME_AB_EXTRACTED_AT] =
-            SQLDataType.TIMESTAMP(6).nullable(false)
-        return metaColumns
+        throw UnsupportedOperationException("ADB do not support getFinalTableMetaColumns")
+//        val metaColumns: LinkedHashMap<String, DataType<*>> =
+//            super.getFinalTableMetaColumns(includeMetaColumn)
+//        // Override this column to be a TIMESTAMP instead of VARCHAR
+//        metaColumns[JavaBaseConstants.COLUMN_NAME_AB_EXTRACTED_AT] =
+//            SQLDataType.TIMESTAMP(6).nullable(false)
+//        return metaColumns
     }
 
     override fun cdcDeletedAtNotNullCondition(): Condition {
@@ -366,17 +273,20 @@ class MysqlSqlGenerator : JdbcSqlGenerator(namingTransformer = MySQLNameTransfor
     }
 
     override fun createSchema(schema: String): Sql {
+        throw UnsupportedOperationException("ADB do not support createSchema")
         // Similar to all the other namespace-related stuff... create a database instead of schema.
-        return Sql.of(dslContext.createDatabaseIfNotExists(quotedName(schema)).sql)
+//        return Sql.of(dslContext.createDatabaseIfNotExists(quotedName(schema)).sql)
     }
 
     // as usual, "schema" is actually "database" in mysql land.
-    override fun renameTable(schema: String, originalName: String, newName: String): String =
-        dslContext
-            .alterTable(name(schema, originalName))
-            // mysql requires you to specify the target database name
-            .renameTo(name(schema, newName))
-            .sql
+    override fun renameTable(schema: String, originalName: String, newName: String): String {
+        throw UnsupportedOperationException("ADB do not support renameTable")
+//        return dslContext
+//            .alterTable(name(schema, originalName))
+//            // mysql requires you to specify the target database name
+//            .renameTo(name(schema, newName))
+//            .sql
+    }
 
     // mysql doesn't support `create table (columnDecls...) AS select...`.
     // It only allows `create table AS select...`.
@@ -384,24 +294,26 @@ class MysqlSqlGenerator : JdbcSqlGenerator(namingTransformer = MySQLNameTransfor
         rawTableName: Name,
         namespace: String,
         tableName: String
-    ) =
-        dslContext
-            .createTable(rawTableName)
-            .`as`(
-                DSL.select(
-                        field(JavaBaseConstants.COLUMN_NAME_AB_ID)
-                            .`as`(JavaBaseConstants.COLUMN_NAME_AB_RAW_ID),
-                        field(JavaBaseConstants.COLUMN_NAME_DATA)
-                            .`as`(JavaBaseConstants.COLUMN_NAME_DATA),
-                        field(JavaBaseConstants.COLUMN_NAME_EMITTED_AT)
-                            .`as`(JavaBaseConstants.COLUMN_NAME_AB_EXTRACTED_AT),
-                        cast(null, timestampWithTimeZoneType)
-                            .`as`(JavaBaseConstants.COLUMN_NAME_AB_LOADED_AT),
-                        castNull(JSON_TYPE).`as`(JavaBaseConstants.COLUMN_NAME_AB_META),
-                    )
-                    .from(table(name(namespace, tableName))),
-            )
-            .getSQL(ParamType.INLINED)
+    ) : String {
+        throw UnsupportedOperationException("ADB do not support createV2RawTableFromV1Table")
+//        return dslContext
+//            .createTable(rawTableName)
+//            .`as`(
+//                DSL.select(
+//                    field(JavaBaseConstants.COLUMN_NAME_AB_ID)
+//                        .`as`(JavaBaseConstants.COLUMN_NAME_AB_RAW_ID),
+//                    field(JavaBaseConstants.COLUMN_NAME_DATA)
+//                        .`as`(JavaBaseConstants.COLUMN_NAME_DATA),
+//                    field(JavaBaseConstants.COLUMN_NAME_EMITTED_AT)
+//                        .`as`(JavaBaseConstants.COLUMN_NAME_AB_EXTRACTED_AT),
+//                    cast(null, timestampWithTimeZoneType)
+//                        .`as`(JavaBaseConstants.COLUMN_NAME_AB_LOADED_AT),
+//                    castNull(JSON_TYPE).`as`(JavaBaseConstants.COLUMN_NAME_AB_META),
+//                )
+//                    .from(table(name(namespace, tableName))),
+//            )
+//            .getSQL(ParamType.INLINED)
+    }
 
     override fun formatTimestampLiteral(instant: Instant): String {
         return TIMESTAMP_FORMATTER.format(instant.atOffset(ZoneOffset.UTC))

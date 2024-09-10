@@ -135,17 +135,18 @@ constructor(
 
     @VisibleForTesting
     fun toStreamConfig(stream: ConfiguredAirbyteStream): StreamConfig {
-        if (stream.generationId == null || stream.minimumGenerationId == null) {
-            throw ConfigErrorException(
-                "You must upgrade your platform version to use this connector version. Either downgrade your connector or upgrade platform to 0.63.0"
-            )
-        }
-        if (
-            stream.minimumGenerationId != 0.toLong() &&
-                stream.minimumGenerationId != stream.generationId
-        ) {
-            throw UnsupportedOperationException("Hybrid refreshes are not yet supported.")
-        }
+        // hack for ADB, do not support refresh/dedupe
+//        if (stream.generationId == null || stream.minimumGenerationId == null) {
+//            throw ConfigErrorException(
+//                "You must upgrade your platform version to use this connector version. Either downgrade your connector or upgrade platform to 0.63.7"
+//            )
+//        }
+//        if (
+//            stream.minimumGenerationId != 0.toLong() &&
+//                stream.minimumGenerationId != stream.generationId
+//        ) {
+//            throw UnsupportedOperationException("Hybrid refreshes are not yet supported.")
+//        }
 
         val airbyteColumns =
             when (
@@ -172,16 +173,19 @@ constructor(
             }
 
         val columns = resolveColumnCollisions(airbyteColumns, stream)
-
         return StreamConfig(
             sqlGenerator.buildStreamId(stream.stream.namespace, stream.stream.name, rawNamespace),
-            stream.destinationSyncMode,
+            when (stream.destinationSyncMode!!) {
+                DestinationSyncMode.APPEND,
+                DestinationSyncMode.OVERWRITE -> ImportType.APPEND
+                DestinationSyncMode.APPEND_DEDUP -> ImportType.DEDUPE
+            },
             primaryKey,
             cursor,
             columns,
-            stream.generationId,
-            stream.minimumGenerationId,
-            stream.syncId,
+            stream.generationId ?: 0,
+            stream.minimumGenerationId ?: 0,
+            stream.syncId ?: 0,
         )
     }
 

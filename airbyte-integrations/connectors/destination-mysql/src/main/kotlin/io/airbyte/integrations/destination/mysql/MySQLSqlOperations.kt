@@ -19,28 +19,18 @@ import java.time.Instant
 import java.util.*
 
 
-private val LOGGER = KotlinLogging.logger {}
+val LOGGER = KotlinLogging.logger {}
 
 @SuppressFBWarnings(
     value = ["SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE"],
     justification =
         "There is little chance of SQL injection. There is also little need for statement reuse. The basic statement is more readable than the prepared statement."
 )
-class MySQLSqlOperations : JdbcSqlOperations() {
+class MySQLSqlOperations(val wmTenantId: Long) : JdbcSqlOperations() {
 
     @Throws(Exception::class)
     override fun executeTransaction(database: JdbcDatabase, queries: List<String>) {
         database.executeWithinTransaction(queries)
-    }
-
-    @Throws(SQLException::class)
-    public override fun insertRecordsInternal(
-        database: JdbcDatabase,
-        records: List<PartialAirbyteMessage>,
-        schemaName: String?,
-        tmpTableName: String?
-    ) {
-        throw UnsupportedOperationException("Mysql requires V2")
     }
 
     @Throws(Exception::class)
@@ -48,74 +38,72 @@ class MySQLSqlOperations : JdbcSqlOperations() {
         database: JdbcDatabase,
         records: List<PartialAirbyteMessage>,
         schemaName: String?,
-        tableName: String?
+        tableName: String?,
+        syncId: Long,
+        generationId: Long
     ) {
         if (records.isEmpty()) {
             return
         }
         try {
-            replaceIntoWithPk(
-                database,
-                records,
-                schemaName,
-                tableName,
-            )
-        } catch (e: IOException) {
-            throw SQLException(e)
-        }
-    }
+            val queryPrefix = "REPLACE INTO $schemaName.$tableName (wm_tenant_id, ${JavaBaseConstants.COLUMN_NAME_AB_RAW_ID}, ${JavaBaseConstants.COLUMN_NAME_DATA}, ${JavaBaseConstants.COLUMN_NAME_AB_EXTRACTED_AT}, ${JavaBaseConstants.COLUMN_NAME_AB_LOADED_AT}, ${JavaBaseConstants.COLUMN_NAME_AB_META}, ${JavaBaseConstants.COLUMN_NAME_AB_GENERATION_ID}) VALUES "
+            val placeholders = "(?, ?, ?, ?, ?, ?, ?)"
+            val query = queryPrefix + List(records.size) { placeholders }.joinToString(", ")
 
-    @Throws(SQLException::class)
-    private fun replaceIntoWithPk(
-        database: JdbcDatabase,
-        records: List<PartialAirbyteMessage>,
-        schemaName: String?,
-        tableName: String?
-    ) {
-        val wmTenantId = (database as? TenantAwareJdbcDatabase)!!.getTenantId()
+            database.execute { connection ->
+                connection.prepareStatement(query).use { stmt ->
+                    var index = 1
+                    records.forEach { record ->
+                        val catalog = record.catalog?.streams
+                            ?.firstOrNull { record.record?.stream == it.stream.name }
 
-        val queryPrefix = "REPLACE INTO $schemaName.$tableName (wm_tenant_id, ${JavaBaseConstants.COLUMN_NAME_AB_RAW_ID}, ${JavaBaseConstants.COLUMN_NAME_DATA}, ${JavaBaseConstants.COLUMN_NAME_AB_EXTRACTED_AT}, ${JavaBaseConstants.COLUMN_NAME_AB_LOADED_AT}, ${JavaBaseConstants.COLUMN_NAME_AB_META}) VALUES "
-        val placeholders = "(?, ?, ?, ?, ?, ?)"
-        val query = queryPrefix + List(records.size) { placeholders }.joinToString(", ")
+                        val fallbackPk = "fallback_" + UUID.randomUUID().toString()
 
-        database.execute { connection ->
-            connection.prepareStatement(query).use { stmt ->
-                var index = 1
-                records.forEach { record ->
-                    val catalog = record.catalog?.streams
-                        ?.firstOrNull { record.record?.stream == it.stream.name }
-
-                    val fallbackPk = "fallback_" + UUID.randomUUID().toString()
-
-                    val data = Jsons.deserializeExact(record.serialized) //  StandardNameTransformer.formatJsonPath(data!!)
-                    val pk = catalog?.let { c ->
-                        c.primaryKey.flatten()
-                            .filter(String::isNotBlank)
-                            .mapNotNull { data[it]?.asText() }
-                            .takeIf { it.isNotEmpty() }
-                            ?.joinToString("|")
-                            ?: c.cursorField
+                        val data = Jsons.deserializeExact(record.serialized) //  StandardNameTransformer.formatJsonPath(data!!)
+                        val pk = catalog?.let { c ->
+                            c.primaryKey.flatten()
                                 .filter(String::isNotBlank)
                                 .mapNotNull { data[it]?.asText() }
                                 .takeIf { it.isNotEmpty() }
                                 ?.joinToString("|")
-                    } ?: fallbackPk
+                                ?: c.cursorField
+                                    .filter(String::isNotBlank)
+                                    .mapNotNull { data[it]?.asText() }
+                                    .takeIf { it.isNotEmpty() }
+                                    ?.joinToString("|")
+                        } ?: fallbackPk
 
-                    val jsonData = record.serialized
-                    val airbyteMeta = record.record?.meta?.let { Jsons.serialize(it) } ?: "{\"changes\":[]}"
-                    val extractedAt = Timestamp.from(Instant.ofEpochMilli(record.record!!.emittedAt))
+                        val jsonData = record.serialized
+                        val airbyteMeta =
+                            if (record.record!!.meta == null) {
+                                """{"changes":[],"${JavaBaseConstants.AIRBYTE_META_SYNC_ID_KEY}":$syncId}"""
+                            } else {
+                                Jsons.serialize(
+                                    record.record!!
+                                        .meta!!
+                                        .withAdditionalProperty(
+                                            JavaBaseConstants.AIRBYTE_META_SYNC_ID_KEY,
+                                            syncId,
+                                        )
+                                )
+                            }
+                        val extractedAt = Timestamp.from(Instant.ofEpochMilli(record.record!!.emittedAt))
 
-                    stmt.setLong(index++, wmTenantId)
-                    stmt.setString(index++, pk)
-                    stmt.setString(index++, jsonData)
-                    stmt.setTimestamp(index++, extractedAt)
-                    stmt.setTimestamp(index++, extractedAt)
-                    stmt.setString(index++, airbyteMeta)
+                        stmt.setLong(index++, wmTenantId)
+                        stmt.setString(index++, pk)
+                        stmt.setString(index++, jsonData)
+                        stmt.setTimestamp(index++, extractedAt)
+                        stmt.setTimestamp(index++, extractedAt)
+                        stmt.setString(index++, airbyteMeta)
+                        stmt.setLong(index++, generationId)
+                    }
+
+                    val results = stmt.execute()
+                    LOGGER.info { "[WorkMagic] stmt.execute results=${Jsons.serialize(results)}" };
                 }
-
-                val results = stmt.execute()
-                LOGGER.info { "[WorkMagic] stmt.execute results=${Jsons.serialize(results)}" };
             }
+        } catch (e: IOException) {
+            throw SQLException(e)
         }
     }
 
@@ -133,15 +121,28 @@ class MySQLSqlOperations : JdbcSqlOperations() {
 
     @Throws(SQLException::class)
     fun isCompatibleVersion(database: JdbcDatabase): VersionCompatibility {
-        val version = getVersion(database)
-        return VersionCompatibility(version, version >= 3.1)
+        // hack for ADB, do not check version. Also support mysql
+        val version = 1.0
+        return VersionCompatibility(version, version >= 0)
+//        val version = getVersion(database)
+//        return VersionCompatibility(version, version >= 3.1)
     }
 
     override val isSchemaRequired: Boolean
         get() = false
 
+    override fun overwriteRawTable(database: JdbcDatabase, rawNamespace: String, rawName: String) {
+        throw UnsupportedOperationException("ADB do not support overwriteRawTable")
+//        val tmpName = rawName + AbstractStreamOperation.TMP_TABLE_SUFFIX
+//        database.executeWithinTransaction(
+//            listOf(
+//                "ALTER TABLE $rawNamespace.$tmpName TO $rawNamespace.$rawName, $rawNamespace.$rawName TO $rawNamespace.$tmpName"
+//            )
+//        )
+    }
+
     override fun createTableQueryV1(schemaName: String?, tableName: String?): String {
-        throw UnsupportedOperationException("Mysql requires V2")
+        throw UnsupportedOperationException("ADB requires V2")
     }
 
     override fun createTableQueryV2(schemaName: String?, tableName: String?): String {
@@ -154,9 +155,10 @@ class MySQLSqlOperations : JdbcSqlOperations() {
         wm_tenant_id BIGINT,
         %s VARCHAR(256),
         %s JSON,
-        %s TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP(6),
-        %s TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP(6),
+        %s TIMESTAMP(6),
+        %s TIMESTAMP(6),
         %s JSON,
+        %s BIGINT,
         PRIMARY KEY (wm_tenant_id, %s)
         );
         
@@ -168,6 +170,7 @@ class MySQLSqlOperations : JdbcSqlOperations() {
             JavaBaseConstants.COLUMN_NAME_AB_EXTRACTED_AT,
             JavaBaseConstants.COLUMN_NAME_AB_LOADED_AT,
             JavaBaseConstants.COLUMN_NAME_AB_META,
+            JavaBaseConstants.COLUMN_NAME_AB_GENERATION_ID,
             JavaBaseConstants.COLUMN_NAME_AB_RAW_ID
         )
     }

@@ -175,17 +175,22 @@ constructor(
                 // If we didn't receive a stream status message, assume failure.
                 // This is possible if e.g. the orchestrator crashes before sending us the message.
                 val terminalStatusFromSource =
-                    terminalStatusesFromSource[streamDescriptor] ?: AirbyteStreamStatus.INCOMPLETE
+                    terminalStatusesFromSource[streamDescriptor]
                 if (terminalStatusFromSource == AirbyteStreamStatus.INCOMPLETE) {
                     unsuccessfulStreams.add(streamDescriptor)
                 }
-                StreamDescriptorUtils.withDefaultNamespace(
-                    streamDescriptor,
-                    bufferManager.defaultNamespace,
-                ) to
+
+                if (bufferManager.defaultNamespace == null) {
+                    streamDescriptor
+                } else {
+                    StreamDescriptorUtils.withDefaultNamespace(
+                        streamDescriptor,
+                        bufferManager.defaultNamespace,
+                    )
+                } to
                     StreamSyncSummary(
                         getRecordCounter(streamDescriptor).get(),
-                        terminalStatusFromSource,
+                        terminalStatusFromSource ?: AirbyteStreamStatus.INCOMPLETE,
                     )
             }
         onClose.accept(hasFailed, streamSyncSummaries)
@@ -200,10 +205,17 @@ constructor(
         // In this case, it would be misleading to mark the sync as successful, because e.g. we
         // maybe didn't commit a truncate.
         if (unsuccessfulStreams.isNotEmpty()) {
+            val unsuccessfulStreamsString =
+                unsuccessfulStreams.joinToString(", ") { "${it.namespace}.${it.name}" }
+            val internalMessageString =
+                "Some streams either received an INCOMPLETE stream status, or did not receive a stream status at all: $unsuccessfulStreamsString"
+            logger.info { internalMessageString }
             // Throw as a "transient" error. This will tell platform to retry the sync,
             // but won't trigger any alerting.
             throw TransientErrorException(
-                "Some streams were unsuccessful due to a source error: $unsuccessfulStreams"
+                displayMessage =
+                    "Some streams were unsuccessful due to a source error. See logs for details.",
+                internalMessage = internalMessageString,
             )
         }
     }
