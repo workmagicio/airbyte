@@ -4,7 +4,9 @@
 package io.airbyte.integrations.destination.mysql
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.google.common.annotations.VisibleForTesting
 import com.google.common.collect.ImmutableMap
+import com.zaxxer.hikari.HikariDataSource
 import io.airbyte.cdk.db.factory.DataSourceFactory
 import io.airbyte.cdk.db.factory.DatabaseDriver
 import io.airbyte.cdk.db.jdbc.JdbcDatabase
@@ -37,6 +39,7 @@ import io.airbyte.integrations.destination.mysql.typing_deduping.MysqlV1V2Migrat
 import io.airbyte.protocol.models.v0.AirbyteConnectionStatus
 import java.sql.SQLSyntaxErrorException
 import java.util.*
+import javax.sql.DataSource
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -48,6 +51,12 @@ class MySQLDestination :
     Destination {
     override val configSchemaKey: String
         get() = JdbcUtils.DATABASE_KEY
+
+    @VisibleForTesting
+    override fun getDatabase(dataSource: DataSource): JdbcDatabase {
+        val wmTenantId = (dataSource as? HikariDataSource)!!.dataSourceProperties!!.getProperty("wmTenantId").toLong();
+        return TenantAwareJdbcDatabase(dataSource, wmTenantId);
+    }
 
     override fun check(config: JsonNode): AirbyteConnectionStatus {
         val dataSource = getDataSource(config)
@@ -103,10 +112,11 @@ class MySQLDestination :
     }
 
     public override fun getDefaultConnectionProperties(config: JsonNode): Map<String, String> {
+        val additionalParams = mapOf("wmTenantId" to config.get("wm_tenant_id").asText())
         return if (JdbcUtils.useSsl(config)) {
-            DEFAULT_SSL_JDBC_PARAMETERS
+            DEFAULT_SSL_JDBC_PARAMETERS + additionalParams
         } else {
-            DEFAULT_JDBC_PARAMETERS
+            DEFAULT_JDBC_PARAMETERS + additionalParams
         }
     }
 
@@ -128,6 +138,9 @@ class MySQLDestination :
         }
         if (config.has(JdbcUtils.JDBC_URL_PARAMS_KEY)) {
             configBuilder.put(JdbcUtils.JDBC_URL_PARAMS_KEY, config[JdbcUtils.JDBC_URL_PARAMS_KEY])
+        }
+        if (config.has("wm_tenant_id")) {
+            configBuilder.put("wm_tenant_id", config.get("wm_tenant_id").asText());
         }
 
         return Jsons.jsonNode(configBuilder.build())
