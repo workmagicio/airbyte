@@ -5,7 +5,9 @@ package io.airbyte.integrations.base.destination.typing_deduping
 
 import io.airbyte.protocol.models.v0.AirbyteStreamNameNamespacePair
 import io.airbyte.protocol.models.v0.StreamDescriptor
-import kotlin.math.max
+import io.github.oshai.kotlinlogging.KotlinLogging
+
+private val LOGGER = KotlinLogging.logger {}
 
 /**
  * In general, callers should not directly instantiate this class. Use [SqlGenerator.buildStreamId]
@@ -79,24 +81,27 @@ data class StreamId(
          */
         @JvmStatic
         fun concatenateRawTableName(namespace: String, name: String): String {
-            val plainConcat = namespace + name
-            // Pretend we always have at least one underscore, so that we never generate
-            // `_raw_stream_`
-            var longestUnderscoreRun = 1
-            var i = 0
-            while (i < plainConcat.length) {
-                // If we've found an underscore, count the number of consecutive underscores
-                var underscoreRun = 0
-                while (i < plainConcat.length && plainConcat[i] == '_') {
-                    underscoreRun++
-                    i++
-                }
-                longestUnderscoreRun =
-                    max(longestUnderscoreRun.toDouble(), underscoreRun.toDouble()).toInt()
-                i++
-            }
-
-            return namespace + "_raw" + "_".repeat(longestUnderscoreRun + 1) + "stream_" + name
+            // hack for ADB, do not support namespace
+            LOGGER.info {"namespace:$namespace"};
+            return "raw_$name"
+//            val plainConcat = namespace + name
+//            // Pretend we always have at least one underscore, so that we never generate
+//            // `_raw_stream_`
+//            var longestUnderscoreRun = 1
+//            var i = 0
+//            while (i < plainConcat.length) {
+//                // If we've found an underscore, count the number of consecutive underscores
+//                var underscoreRun = 0
+//                while (i < plainConcat.length && plainConcat[i] == '_') {
+//                    underscoreRun++
+//                    i++
+//                }
+//                longestUnderscoreRun =
+//                    max(longestUnderscoreRun.toDouble(), underscoreRun.toDouble()).toInt()
+//                i++
+//            }
+//
+//            return namespace + "_raw" + "_".repeat(longestUnderscoreRun + 1) + "stream_" + name
         }
     }
 }

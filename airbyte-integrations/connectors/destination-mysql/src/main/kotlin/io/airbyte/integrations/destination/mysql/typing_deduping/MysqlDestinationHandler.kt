@@ -7,6 +7,7 @@ package io.airbyte.integrations.destination.mysql.typing_deduping
 import com.fasterxml.jackson.databind.JsonNode
 import io.airbyte.cdk.db.jdbc.JdbcDatabase
 import io.airbyte.cdk.integrations.base.JavaBaseConstants
+import io.airbyte.cdk.integrations.destination.jdbc.JdbcGenerationHandler
 import io.airbyte.cdk.integrations.destination.jdbc.TableDefinition
 import io.airbyte.cdk.integrations.destination.jdbc.typing_deduping.JdbcDestinationHandler
 import io.airbyte.integrations.base.destination.typing_deduping.AirbyteProtocolType
@@ -17,8 +18,6 @@ import io.airbyte.integrations.base.destination.typing_deduping.Struct
 import io.airbyte.integrations.base.destination.typing_deduping.Union
 import io.airbyte.integrations.base.destination.typing_deduping.UnsupportedOneOf
 import io.airbyte.integrations.base.destination.typing_deduping.migrators.MinimumDestinationState
-import java.sql.DatabaseMetaData
-import java.sql.ResultSet
 import java.util.Optional
 import org.jooq.DataType
 import org.jooq.SQLDialect
@@ -27,6 +26,7 @@ import org.jooq.impl.DefaultDataType
 class MysqlDestinationHandler(
     jdbcDatabase: JdbcDatabase,
     rawTableDatabaseName: String,
+    generationHandler: JdbcGenerationHandler,
 ) :
     JdbcDestinationHandler<MinimumDestinationState>(
         // Mysql doesn't have an actual schema concept.
@@ -35,6 +35,7 @@ class MysqlDestinationHandler(
         jdbcDatabase,
         rawTableDatabaseName,
         SQLDialect.MYSQL,
+        generationHandler = generationHandler
     ) {
     override val stateTableUpdatedAtType: DataType<*> =
         DefaultDataType(SQLDialect.MYSQL, String::class.java, "datetime")
@@ -66,15 +67,12 @@ class MysqlDestinationHandler(
         )
 
     override fun createNamespaces(schemas: Set<String>) {
-
+        throw UnsupportedOperationException("ADB do not support createNamespaces")
     }
 
     // Mysql doesn't have schemas. Pass the namespace as the database name.
     override fun findExistingTable(id: StreamId): Optional<TableDefinition> =
         findExistingTable(jdbcDatabase, id.finalNamespace, null, id.finalName)
-
-    override fun getTableFromMetadata(dbmetadata: DatabaseMetaData, id: StreamId): ResultSet =
-        dbmetadata.getTables(id.rawNamespace, null, id.rawName, null)
 
     companion object {
         private fun toJdbcTypeName(airbyteProtocolType: AirbyteProtocolType): String =

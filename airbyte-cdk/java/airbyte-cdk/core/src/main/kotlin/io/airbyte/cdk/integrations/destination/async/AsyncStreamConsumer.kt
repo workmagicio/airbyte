@@ -175,7 +175,7 @@ constructor(
                 // If we didn't receive a stream status message, assume failure.
                 // This is possible if e.g. the orchestrator crashes before sending us the message.
                 val terminalStatusFromSource =
-                    terminalStatusesFromSource[streamDescriptor] ?: AirbyteStreamStatus.INCOMPLETE
+                    terminalStatusesFromSource[streamDescriptor]
                 if (terminalStatusFromSource == AirbyteStreamStatus.INCOMPLETE) {
                     unsuccessfulStreams.add(streamDescriptor)
                 }
@@ -190,7 +190,7 @@ constructor(
                 } to
                     StreamSyncSummary(
                         getRecordCounter(streamDescriptor).get(),
-                        terminalStatusFromSource,
+                        terminalStatusFromSource ?: AirbyteStreamStatus.INCOMPLETE,
                     )
             }
         onClose.accept(hasFailed, streamSyncSummaries)
