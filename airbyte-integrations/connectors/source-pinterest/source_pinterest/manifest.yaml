@@ -365,6 +365,7 @@ definitions:
     # Docs: https://developers.pinterest.com/docs/api/v5/#operation/ad_account/analytics
     name: "ad_account_analytics"
     $ref: "#/definitions/base_analytics_stream"
+    primary_key: ["DATE", "AD_ACCOUNT_ID"]
     schema_loader:
       type: InlineSchemaLoader
       schema: "#/definitions/ad_account_analytics_schema"
@@ -375,6 +376,7 @@ definitions:
     # Docs: https://developers.pinterest.com/docs/api/v5/#operation/campaigns/analytics
     name: "campaign_analytics"
     $ref: "#/definitions/base_analytics_stream"
+    primary_key: ["DATE", "AD_ACCOUNT_ID", "CAMPAIGN_ID"]
     schema_loader:
       type: InlineSchemaLoader
       schema: "#/definitions/campaign_analytics_schema"
@@ -394,6 +396,7 @@ definitions:
     # Docs: https://developers.pinterest.com/docs/api/v5/#operation/ad_groups/analytics
     name: "ad_group_analytics"
     $ref: "#/definitions/base_analytics_stream"
+    primary_key: ["DATE", "AD_ACCOUNT_ID", "CAMPAIGN_ID", "AD_GROUP_ID"]
     schema_loader:
       type: InlineSchemaLoader
       schema: "#/definitions/ad_group_analytics_schema"
@@ -413,6 +416,7 @@ definitions:
     # Docs: https://developers.pinterest.com/docs/api/v5/#operation/ads/analytics
     name: "ad_analytics"
     $ref: "#/definitions/base_analytics_stream"
+    primary_key: ["DATE", "AD_ACCOUNT_ID", "CAMPAIGN_ID", "AD_GROUP_ID", "AD_ID"]
     schema_loader:
       type: InlineSchemaLoader
       schema: "#/definitions/ad_analytics_schema"
