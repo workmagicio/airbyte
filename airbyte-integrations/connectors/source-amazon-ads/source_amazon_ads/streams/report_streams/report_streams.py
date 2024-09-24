@@ -98,7 +98,7 @@ class ReportStream(BasicAmazonAdsStream, ABC):
     API_VERSION = "v2"
     primary_key = ["profileId", "campaignId", "date"]
     # https://advertising.amazon.com/API/docs/en-us/reporting/v2/faq#what-is-the-available-report-history-for-the-version-2-reporting-api
-    REPORTING_PERIOD = 60
+    REPORTING_PERIOD = 59
     day_range = 31
     # (Service limits section)
     # Format used to specify metric generation date over Amazon Ads API.
@@ -446,7 +446,7 @@ class ReportStream(BasicAmazonAdsStream, ABC):
             if start_date > report_date:
                 start_date = report_date.subtract(days=self.day_range)
 
-            first_date = pendulum.today(tz=profile.timezone).subtract(days=60).date()
+            first_date = pendulum.today(tz=profile.timezone).subtract(days=59).date()
             print('db-4 first_date', first_date)
             if start_date < first_date:
                 start_date = first_date
