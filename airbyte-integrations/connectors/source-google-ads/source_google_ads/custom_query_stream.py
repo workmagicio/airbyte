@@ -2,9 +2,11 @@
 # Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
-
+import logging
 from functools import lru_cache
 from typing import Any, Dict, Mapping
+
+logger = logging.getLogger()
 
 from .streams import GoogleAdsStream, IncrementalGoogleAdsStream
 from .utils import GAQL
@@ -24,8 +26,7 @@ class CustomQueryMixin:
         It will be ignored if provided.
         If you need to enable it, uncomment the next line instead of `return None` and modify your config
         """
-        # return self.config.get("primary_key") or None
-        return None
+        return self.config.get("primary_key") or None
 
     @property
     def name(self):
@@ -101,6 +102,9 @@ class IncrementalCustomQuery(CustomQueryMixin, IncrementalGoogleAdsStream):
         """
         if "segments.date" not in query.fields:
             query = query.append_field("segments.date")
+        import pendulum
+        start_date = pendulum.parse(start_date).subtract(days=30).to_date_string()
+        logger.info(f"google ads start_date {start_date}")
         condition = f"segments.date BETWEEN '{start_date}' AND '{end_date}'"
         if query.where:
             return query.set_where(query.where + " AND " + condition)
