@@ -1171,6 +1171,7 @@ class Orders(IncrementalAmazonSPStream):
     next_page_token_field = "NextToken"
     page_size_field = "MaxResultsPerPage"
     default_backoff_time = 60
+    state_checkpoint_interval = 1000
     use_cache = True
 
     def path(self, **kwargs) -> str:
