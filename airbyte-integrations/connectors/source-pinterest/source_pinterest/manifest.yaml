@@ -370,7 +370,7 @@ definitions:
       type: InlineSchemaLoader
       schema: "#/definitions/ad_account_analytics_schema"
     $parameters:
-      path: "ad_accounts/{{ stream_slice.id }}/analytics"
+      path: "ad_accounts/{{ stream_slice.id }}/analytics?view_window_days=30"
 
   campaign_analytics_stream:
     # Docs: https://developers.pinterest.com/docs/api/v5/#operation/campaigns/analytics
@@ -390,7 +390,7 @@ definitions:
             stream: "#/definitions/campaigns_stream"
             partition_field: "id"
     $parameters:
-      path: "ad_accounts/{{ stream_slice.parent_slice.id }}/campaigns/analytics?campaign_ids={{ stream_slice.id }}"
+      path: "ad_accounts/{{ stream_slice.parent_slice.id }}/campaigns/analytics?campaign_ids={{ stream_slice.id }}&view_window_days=30"
 
   ad_group_analytics_stream:
     # Docs: https://developers.pinterest.com/docs/api/v5/#operation/ad_groups/analytics
@@ -410,7 +410,7 @@ definitions:
             stream: "#/definitions/ad_groups_stream"
             partition_field: "id"
     $parameters:
-      path: "ad_accounts/{{ stream_slice.parent_slice.id }}/ad_groups/analytics?ad_group_ids={{ stream_slice.id }}"
+      path: "ad_accounts/{{ stream_slice.parent_slice.id }}/ad_groups/analytics?ad_group_ids={{ stream_slice.id }}&view_window_days=30"
 
   ad_analytics_stream:
     # Docs: https://developers.pinterest.com/docs/api/v5/#operation/ads/analytics
@@ -430,7 +430,7 @@ definitions:
             stream: "#/definitions/ads_stream"
             partition_field: "id"
     $parameters:
-      path: "ad_accounts/{{ stream_slice.parent_slice.id }}/ads/analytics?ad_ids={{ stream_slice.id }}"
+      path: "ad_accounts/{{ stream_slice.parent_slice.id }}/ads/analytics?ad_ids={{ stream_slice.id }}&view_window_days=30"
 
   # Schemas
   ad_accounts_schema:
