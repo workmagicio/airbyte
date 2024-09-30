@@ -134,11 +134,11 @@ definitions:
         record_filter:
           type: RecordFilter
           condition: "{{ record['updated_time'] >= stream_slice['start_time'] | int }}"
-    incremental_sync:
-      type: DatetimeBasedCursor
-      cursor_field: "updated_time"
-      datetime_format: "%s"
-      start_datetime: "{{ format_datetime(config.get('start_date'), '%s') if config.get('start_date') else 0 }}"
+    # incremental_sync:
+    #   type: DatetimeBasedCursor
+    #   cursor_field: "updated_time"
+    #   datetime_format: "%s"
+    #   start_datetime: "{{ format_datetime(config.get('start_date'), '%s') if config.get('start_date') else 0 }}"
 
   base_analytics_stream:
     type: DeclarativeStream
