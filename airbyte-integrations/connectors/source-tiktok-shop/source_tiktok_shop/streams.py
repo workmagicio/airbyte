@@ -111,6 +111,8 @@ class Orders(TiktokShopStream):
 
         params["sign"] = sign
 
+        print("debug_request_params:", params)
+
         return params
 
     def _update_start_time(self, stream_state: Mapping[str, Any]):
@@ -177,3 +179,26 @@ class Orders(TiktokShopStream):
         for record in super().read_records(sync_mode, cursor_field, stream_slice, stream_state):
             self.state = {self.cursor_field: record.get(self.cursor_field)}
             yield record
+
+
+class ReturnOrders(Orders):
+    use_cache = True
+    _state = {}
+    page_size = 50
+
+    @property
+    def primary_key(self) -> Union[str, List[str], None]:
+        return ["return_id"]  # 使用 'user_id' 和 'order_id' 共同作为主键
+
+    def path(self, **kwargs) -> str:
+        return "/return_refund/202309/returns/search"
+
+
+    def parse_response(
+            self,
+            response: requests.Response,
+            stream_state: Mapping[str, Any] = None,
+            stream_slice: Mapping[str, Any] = None,
+            **kwargs: Any,
+    ) -> Iterable[Mapping]:
+        yield from response.json().get('data', {}).get('return_orders', [])

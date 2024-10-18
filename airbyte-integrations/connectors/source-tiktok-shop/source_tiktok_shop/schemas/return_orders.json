@@ -1,0 +1,188 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "combined_return_id": {
+      "type": ["null", "string"]
+    },
+    "create_time": {
+      "type": ["null", "integer"]
+    },
+    "discount_amount": {
+      "type": ["null", "array"],
+      "items" : {
+        "type" : "object",
+        "properties" : {
+          "currency": {
+            "type" : ["null", "string"]
+          },
+          "product_platform_discount": {
+            "type" : ["null", "string"]
+          },
+          "product_seller_discount": {
+            "type" : ["null", "string"]
+          },
+          "shipping_fee_platform_discount": {
+            "type" : ["null", "string"]
+          },
+          "shipping_fee_seller_discount": {
+            "type" : ["null", "string"]
+          }
+        }
+      }
+    },
+    "is_combined_return": {
+      "type": ["null", "boolean"]
+    },
+    "order_id": {
+      "type": ["null", "string"]
+    },
+    "refund_amount": {
+      "type": ["null", "array"],
+      "items" : {
+        "type" : "object",
+        "properties" : {
+          "currency": {
+            "type" : ["null", "string"]
+          },
+          "refund_shipping_fee": {
+            "type" : ["null", "string"]
+          },
+          "refund_subtotal": {
+            "type" : ["null", "string"]
+          },
+          "refund_tax": {
+            "type" : ["null", "string"]
+          },
+          "refund_total": {
+            "type" : ["null", "string"]
+          }
+        }
+      }
+    },
+    "return_id": {
+      "type": ["null", "string"]
+    },
+    "return_line_items": {
+      "type": ["null", "array"],
+      "items" : {
+        "type" : "object",
+        "properties" : {
+          "order_line_item_id": {
+            "type" : ["null", "string"]
+          },
+          "product_image": {
+            "type" : ["null", "array"],
+            "items" : {
+              "type" : "object",
+              "properties" : {
+                "height": {
+                  "type" : ["null", "integer"]
+                },
+                "url": {
+                  "type" : ["null", "string"]
+                },
+                "width": {
+                  "type" : ["null", "integer"]
+                }
+              }
+            }
+          },
+          "product_name": {
+            "type" : ["null", "string"]
+          },
+          "refund_amount": {
+            "type": ["null", "array"],
+            "items" : {
+              "type" : "object",
+              "properties" : {
+                "currency": {
+                  "type" : ["null", "string"]
+                },
+                "refund_shipping_fee": {
+                  "type" : ["null", "string"]
+                },
+                "refund_subtotal": {
+                  "type" : ["null", "string"]
+                },
+                "refund_tax": {
+                  "type" : ["null", "string"]
+                },
+                "refund_total": {
+                  "type" : ["null", "string"]
+                }
+              }
+            }
+          },
+          "return_line_item_id": {
+            "type" : ["null", "string"]
+          },
+          "seller_sku": {
+            "type" : ["null", "string"]
+          },
+          "sku_id": {
+            "type" : ["null", "string"]
+          },
+          "sku_name": {
+            "type" : ["null", "string"]
+          }
+        }
+      }
+    },
+    "return_reason": {
+      "type": ["null", "string"]
+    },
+    "return_reason_text": {
+      "type": ["null", "string"]
+    },
+    "return_status": {
+      "type": ["null", "string"]
+    },
+    "return_type": {
+      "type": ["null", "string"]
+    },
+    "role": {
+      "type": ["null", "string"]
+    },
+    "seller_next_action_response": {
+      "type" : ["null", "array"],
+      "items" : {
+        "type" : "object",
+        "properties" : {
+          "action": {
+            "type" : ["null", "string"]
+          },
+          "deadline": {
+            "type" : ["null", "integer"]
+          },
+          "width": {
+            "type" : ["null", "integer"]
+          }
+        }
+      }
+    },
+    "shipping_fee_amount": {
+      "type" : ["null", "array"],
+      "items" : {
+        "type" : "object",
+        "properties" : {
+          "buyer_paid_return_shipping_fee": {
+            "type" : ["null", "string"]
+          },
+          "currency": {
+            "type" : ["null", "string"]
+          },
+          "seller_paid_return_shipping_fee": {
+            "type" : ["null", "string"]
+          },
+          "platform_paid_return_shipping_fee": {
+            "type" : ["null", "string"]
+          }
+        }
+      }
+    },
+    "update_time": {
+      "type": ["null", "integer"]
+    }
+  }
+}

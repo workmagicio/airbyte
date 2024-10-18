@@ -10,7 +10,7 @@ from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams.core import Stream
 
 from source_tiktok_shop.auth import TiktokAuthenticator
-from source_tiktok_shop.streams import Orders
+from source_tiktok_shop.streams import Orders, ReturnOrders
 
 DEFAULT_RETENTION_PERIOD_IN_DAYS = 30
 
@@ -81,7 +81,8 @@ class SourceTiktokShop(AbstractSource):
 
     def streams(self, config: Mapping[str, Any]) -> List[Stream]:
         stream_list = [
-            Orders
+            Orders,
+            ReturnOrders
         ]
 
         stream_kwargs = self._get_stream_kwargs(config)
